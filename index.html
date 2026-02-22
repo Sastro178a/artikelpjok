@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edukasi Renang - Moh Agus Sastro Negoro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Montserrat & Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800;900&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- PeerJS for Remote Control P2P -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        heading: ['Montserrat', 'sans-serif'],
+                    },
+                    colors: {
+                        waterDeep: '#075985',
+                        waterMain: '#0ea5e9',
+                        waterLight: '#f0f9ff',
+                        waterCyan: '#22d3ee',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #f0f9ff; color: #0c4a6e; overflow-x: hidden; font-family: 'Outfit', sans-serif; }
+        h1, h2, h3, .font-heading { font-family: 'Montserrat', sans-serif; }
+        
+        .water-gradient { background: linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(14, 165, 233, 0.2); }
+        
+        /* Wave Animation */
+        .waves { position: relative; width: 100%; height: 12vh; margin-bottom: -7px; min-height: 80px; max-height: 120px; }
+        .parallax > use { animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite; }
+        .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
+        .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
+        .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
+        .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
+        @keyframes move-forever { 0% { transform: translate3d(-90px,0,0); } 100% { transform: translate3d(85px,0,0); } }
+
+        @keyframes slideInUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes pptSlideNext { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes pptSlidePrev { from { transform: translateX(-60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes scanAnim { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
+
+        .animate-slide-up { animation: slideInUp 0.8s ease-out forwards; }
+        .slide-next { animation: pptSlideNext 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .slide-prev { animation: pptSlidePrev 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        
+        .bubble { position: fixed; bottom: -50px; background: rgba(34, 211, 238, 0.15); border: 1px solid rgba(255,255,255,0.4); border-radius: 50%; pointer-events: none; animation: bubbleFloat 12s linear infinite; z-index: -1; }
+        @keyframes bubbleFloat { 0% { transform: translateY(0) scale(1); opacity: 0; } 50% { opacity: 0.6; } 100% { transform: translateY(-100vh) scale(1.2); opacity: 0; } }
+        @keyframes shrinkToIcon { 0% { transform: scale(1) translateY(0); opacity: 1; } 100% { transform: scale(0.3) translate(-120px, -200px); opacity: 0; visibility: hidden; } }
+        .shrink-icon { animation: shrinkToIcon 1.5s forwards ease-in-out; pointer-events: none; }
+
+        #sidebar { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar-open { transform: translateX(0) !important; }
+
+        /* PPT Layout */
+        .ppt-layout { display: grid; grid-template-rows: auto 1fr; height: 100vh; background: radial-gradient(circle at center, #075985 0%, #0c4a6e 100%); overflow: hidden; }
+        .ppt-content { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 4rem 2rem; color: white; height: 100%; overflow-y: auto; }
+        .ppt-image { max-height: 45vh; width: auto; object-fit: contain; border-radius: 1.5rem; border: 6px solid rgba(255,255,255,0.1); margin: 1.5rem 0; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .ppt-text-box { background: rgba(255,255,255,0.05); padding: 2.5rem; border-radius: 1.5rem; backdrop-blur: 8px; border: 1px solid rgba(255,255,255,0.1); max-width: 1000px; width: 100%; text-align: left; }
+        
+        .no-scroll { overflow: hidden; }
+
+        /* Scanner UI Enchanced */
+        .scanner-line { position: absolute; left: 0; width: 100%; height: 4px; background: #22d3ee; box-shadow: 0 0 20px #22d3ee, 0 0 40px #0ea5e9; animation: scanAnim 3s infinite linear; z-index: 10; }
+        .scanning-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(34, 211, 238, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.15) 1px, transparent 1px); background-size: 25px 25px; z-index: 1; pointer-events: none;}
+        .face-bracket { position: absolute; width: 40px; height: 40px; border-color: #22d3ee; border-style: solid; border-width: 0; z-index: 5; transition: all 0.3s;}
+        .fb-tl { top: 20px; left: 20px; border-top-width: 4px; border-left-width: 4px; border-top-left-radius: 10px;}
+        .fb-tr { top: 20px; right: 20px; border-top-width: 4px; border-right-width: 4px; border-top-right-radius: 10px;}
+        .fb-bl { bottom: 20px; left: 20px; border-bottom-width: 4px; border-left-width: 4px; border-bottom-left-radius: 10px;}
+        .fb-br { bottom: 20px; right: 20px; border-bottom-width: 4px; border-right-width: 4px; border-bottom-right-radius: 10px;}
+
+        /* Tirai */
+        .curtain-container { position: fixed; inset: 0; z-index: 9999; pointer-events: none; display: flex; overflow: hidden; }
+        .curtain-panel { width: 50%; height: 100%; background: #7f1d1d; background-image: repeating-linear-gradient(to right, transparent, transparent 40px, rgba(0,0,0,0.3) 40px, rgba(0,0,0,0.3) 80px); box-shadow: inset 0 0 50px rgba(0,0,0,0.8); transition: transform 2s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(0); }
+        .curtain-left { border-right: 15px solid #4c0519; }
+        .curtain-right { border-left: 15px solid #4c0519; }
+        .curtain-open .curtain-left { transform: translateX(-100%); }
+        .curtain-open .curtain-right { transform: translateX(100%); }
+
+        /* Remote Responsive */
+        .remote-nav-shrink { height: 40% !important; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .remote-btn-active { transform: scale(0.95); background-color: #0ea5e9 !important; border-color: #38bdf8 !important; }
+    </style>
+</head>
+<body class="antialiased selection:bg-waterMain selection:text-white">
+
+    <div id="bubble-container"></div>
+
+    <!-- VOICE ASSISTANT INDICATOR (Icon Only, Top Right) -->
+    <div id="voice-indicator" class="fixed top-8 right-8 w-12 h-12 bg-black/50 backdrop-blur-md text-red-500 rounded-full z-[9999] shadow-[0_0_15px_rgba(239,68,68,0.5)] flex items-center justify-center transition-opacity duration-300 opacity-0 pointer-events-none border border-red-500/50">
+        <i class="fas fa-microphone animate-pulse text-xl"></i>
+    </div>
+
+    <!-- AUDIO ASSETS -->
+    <audio id="bg-music" loop preload="auto"><source src="https://audio.jukehost.co.uk/PSQ19fLpNf8BbW3qIwpqHfN0ithhBqww" type="audio/mpeg"></audio>
+    <audio id="audio-curtain" preload="auto"><source src="https://audio.jukehost.co.uk/SXTeSteaEnBOsECrgwwdb3rCuke4oNF1" type="audio/mpeg"></audio>
+    <audio id="audio-applause" preload="auto"><source src="https://audio.jukehost.co.uk/mMufSXxK2Wd2MPY9BCGBQyqVcaeY4D0A" type="audio/mpeg"></audio>
+    <audio id="audio-wow" preload="auto"><source src="https://audio.jukehost.co.uk/ZEiOx4vjfhyrGpKlKamhutspUxBSR9V4" type="audio/mpeg"></audio>
+    <!-- AUDIO JARVIS VERIFICATION -->
+    <audio id="audio-jarvis-auth" preload="auto"><source src="https://audio.jukehost.co.uk/RvG4K0FW1Cz9LO4o5Wr32gH01yVSQJMI" type="audio/mpeg"></audio>
+
+    <!-- TIRAI LAYER -->
+    <div id="curtain-system" class="curtain-container curtain-open">
+        <div class="curtain-panel curtain-left"></div>
+        <div class="curtain-panel curtain-right"></div>
+    </div>
+
+    <!-- PAGE 1: LOGIN -->
+    <section id="page-1" class="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-sky-400 via-blue-500 to-waterDeep text-center">
+        <div class="absolute bottom-0 w-full">
+            <svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+                <defs><path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" /></defs>
+                <g class="parallax">
+                    <use xlink:href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.7" />
+                    <use xlink:href="#gentle-wave" x="48" y="3" fill="rgba(255,255,255,0.5" />
+                    <use xlink:href="#gentle-wave" x="48" y="5" fill="rgba(255,255,255,0.3" />
+                    <use xlink:href="#gentle-wave" x="48" y="7" fill="#f0f9ff" />
+                </g>
+            </svg>
+        </div>
+
+        <div class="glass-panel p-8 md:p-12 rounded-[2.5rem] shadow-2xl z-10 w-[90%] max-w-md animate-slide-up border-b-8 border-b-white text-center">
+            <div class="relative inline-block mb-6">
+                <img src="https://files.catbox.moe/fxdvji.jpg" alt="Moh Agus Sastro Negoro" class="w-32 h-32 mx-auto rounded-full border-4 border-white object-cover shadow-2xl transition-transform hover:scale-110 duration-500">
+                <div class="absolute bottom-1 right-1 bg-waterCyan w-8 h-8 rounded-full border-4 border-white flex items-center justify-center text-white text-xs">
+                    <i class="fas fa-check"></i>
+                </div>
+            </div>
+            <h1 class="font-heading text-3xl font-extrabold mb-1 text-waterDeep tracking-tight uppercase">Materi Renang</h1>
+            <p class="text-sm text-blue-600 mb-8 font-bold uppercase tracking-[0.2em]">SMK PGRI 1 Giri Banyuwangi</p>
+            
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5 text-left mb-6">
+                <div class="space-y-2">
+                    <label class="block text-xs font-black text-waterDeep uppercase tracking-wider ml-1">Nama Siswa</label>
+                    <input type="text" id="input-name" required placeholder="Ketik nama Anda..." class="w-full bg-white/60 border-2 border-transparent focus:border-waterMain rounded-2xl px-5 py-3 text-waterDeep font-bold outline-none transition-all placeholder:text-blue-300">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-xs font-black text-waterDeep uppercase tracking-wider ml-1">Jenis Kelamin</label>
+                    <select id="input-gender" required class="w-full bg-white/60 border-2 border-transparent focus:border-waterMain rounded-2xl px-5 py-3 text-waterDeep font-bold outline-none appearance-none cursor-pointer">
+                        <option value="" disabled selected>Pilih Gender</option>
+                        <option value="Laki-laki">Laki-laki</option>
+                        <option value="Perempuan">Perempuan</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-waterDeep hover:bg-black text-white font-black py-4 px-4 rounded-2xl transition-all duration-300 transform hover:-translate-y-1 shadow-[0_10px_20px_rgba(7,89,133,0.3)] flex justify-center items-center gap-3">
+                    MULAI BELAJAR <i class="fas fa-chevron-right text-xs"></i>
+                </button>
+            </form>
+
+            <div class="border-t border-sky-200/50 pt-6">
+                <button type="button" onclick="openRemoteApp()" class="w-full bg-white text-waterMain border-2 border-waterMain hover:bg-waterMain hover:text-white font-black py-4 px-4 rounded-2xl transition-all duration-300 flex justify-center items-center gap-3 uppercase text-xs tracking-widest shadow-lg">
+                    <i class="fas fa-mobile-alt text-lg"></i> Buka Remote HP
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- REMOTE APP UI (MOBILE P2P CONTROLLER) -->
+    <div id="remote-app" class="fixed inset-0 bg-gray-900 z-[9999] hidden flex flex-col font-sans select-none overflow-hidden text-center">
+        <!-- Remote Login -->
+        <div id="remote-login" class="flex-1 flex flex-col items-center justify-center p-8 bg-gradient-to-b from-gray-800 to-black text-center relative">
+            <button type="button" onclick="closeRemoteApp()" class="absolute top-6 right-6 text-gray-500 hover:text-white"><i class="fas fa-times text-2xl"></i></button>
+            <i class="fas fa-broadcast-tower text-6xl text-waterCyan mb-6 animate-pulse"></i>
+            <h2 class="font-heading text-3xl font-black text-white mb-2 uppercase tracking-widest text-center w-full">Remote P2P</h2>
+            <p class="text-gray-400 mb-8 text-sm text-center w-full">Masukkan 4 digit kode dari Laptop.</p>
+            
+            <div class="flex items-center justify-center gap-3 mb-8 bg-gray-800 p-4 rounded-2xl border border-gray-700 w-full max-w-xs shadow-inner mx-auto">
+                <span class="text-xl font-black text-gray-500 uppercase">SRZM -</span>
+                <input type="number" id="remote-code-input" class="w-24 bg-transparent text-white text-3xl font-black text-center outline-none border-b-2 border-waterCyan" placeholder="1234" maxlength="4">
+            </div>
+            
+            <button type="button" id="btn-connect-remote" onclick="connectRemote()" class="w-full max-w-xs bg-waterCyan hover:bg-cyan-300 text-black font-black py-4 rounded-2xl uppercase tracking-widest transition-all mx-auto">Hubungkan</button>
+            <p id="remote-error" class="text-red-500 mt-4 text-xs font-bold hidden uppercase text-center">Gagal terhubung!</p>
+        </div>
+
+        <!-- Remote Controller -->
+        <div id="remote-controller" class="hidden flex-1 flex flex-col bg-black relative">
+            <div id="connection-toast" class="absolute inset-0 z-50 flex items-center justify-center bg-waterCyan/90 backdrop-blur pointer-events-none">
+                <div class="text-center">
+                    <i class="fas fa-check-circle text-6xl text-white mb-4"></i>
+                    <h2 class="font-heading text-3xl font-black text-white">TERSAMBUNG</h2>
+                </div>
+            </div>
+            
+            <div class="h-16 flex justify-between items-center px-6 bg-gray-900 border-b border-gray-800">
+                <div class="flex items-center gap-2 text-waterCyan font-bold text-xs tracking-widest uppercase"><i class="fas fa-circle text-[8px] animate-pulse"></i> Online</div>
+                <button type="button" onclick="closeRemoteApp()" class="text-red-400 text-xs font-bold uppercase">Putus</button>
+            </div>
+
+            <div id="remote-nav-area" class="flex-1 flex w-full transition-all duration-500">
+                <button type="button" onclick="sendCmd('PREV', this)" class="flex-1 bg-gray-800 m-3 rounded-[2.5rem] flex items-center justify-center border-2 border-gray-700 shadow-xl transition-all">
+                    <i class="fas fa-chevron-left text-6xl text-gray-500 pointer-events-none"></i>
+                </button>
+                <button type="button" onclick="sendCmd('NEXT', this)" class="flex-1 bg-gray-800 m-3 rounded-[2.5rem] flex items-center justify-center border-2 border-gray-700 shadow-xl transition-all">
+                    <i class="fas fa-chevron-right text-6xl text-gray-500 pointer-events-none"></i>
+                </button>
+            </div>
+
+            <div class="flex justify-center -mt-8 z-10">
+                <button type="button" onclick="toggleSecretMenu()" class="w-20 h-20 bg-waterDeep border-4 border-black text-waterCyan font-heading font-black text-3xl rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.3)] active:scale-90 transition-transform">S</button>
+            </div>
+
+            <!-- Special Buttons Cleaned (Icon Only) -->
+            <div id="special-menu" class="h-0 opacity-0 overflow-hidden transition-all duration-500 bg-black px-4 grid grid-cols-2 gap-4">
+                <button type="button" onclick="sendCmd('CURTAIN', this)" class="bg-gradient-to-br from-red-900 to-red-700 text-white py-6 rounded-3xl flex items-center justify-center border border-red-500 shadow-lg">
+                    <i class="fas fa-masks-theater text-4xl pointer-events-none"></i>
+                </button>
+                <button type="button" onclick="sendCmd('APPLAUSE', this)" class="bg-gradient-to-br from-yellow-700 to-orange-600 text-white py-6 rounded-3xl flex items-center justify-center border border-yellow-500 shadow-lg">
+                    <i class="fas fa-hands-clapping text-4xl pointer-events-none"></i>
+                </button>
+                <button type="button" onclick="sendCmd('WOW', this)" class="bg-gradient-to-br from-purple-800 to-purple-600 text-white py-6 rounded-3xl flex items-center justify-center border border-purple-400 shadow-lg">
+                    <i class="fas fa-face-surprise text-4xl pointer-events-none"></i>
+                </button>
+                <button type="button" onclick="sendCmd('BGM', this)" class="bg-gradient-to-br from-green-800 to-emerald-600 text-white py-6 rounded-3xl flex items-center justify-center border border-emerald-400 shadow-lg">
+                    <i class="fas fa-music text-4xl pointer-events-none"></i>
+                </button>
+            </div>
+            <div class="h-6 bg-black"></div>
+        </div>
+    </div>
+
+    <!-- WELCOME POPUP (ARTICLE) -->
+    <div id="welcome-popup" class="fixed inset-0 bg-waterDeep/70 z-50 hidden flex items-center justify-center backdrop-blur-xl">
+        <div id="welcome-box" class="bg-white p-10 rounded-[3rem] max-w-lg w-[90%] text-center border-t-[12px] border-t-waterMain relative shadow-2xl">
+            <div class="absolute -top-14 left-1/2 transform -translate-x-1/2 bg-white border-4 border-waterMain rounded-full p-5 shadow-2xl text-waterMain">
+                <i class="fas fa-water text-5xl"></i>
+            </div>
+            <h2 class="font-heading text-3xl font-extrabold mt-8 mb-4 text-waterDeep">Halo, <span id="display-name" class="text-waterMain">Siswa</span>!</h2>
+            <p class="text-gray-600 mb-10 leading-relaxed font-medium">Selamat datang di Materi Edukasi Renang Lengkap untuk SMK PGRI 1 Giri Banyuwangi yang disusun oleh Sastro Negoro.</p>
+            <button type="button" onclick="startArticle()" class="bg-waterMain hover:bg-waterDeep text-white font-black py-4 px-12 rounded-2xl transition-all shadow-xl uppercase tracking-wider">Buka Materi <i class="fas fa-book-open ml-2"></i></button>
+        </div>
+    </div>
+
+    <!-- ARTICLE CONTENT -->
+    <section id="page-2" class="hidden min-h-screen relative pb-20">
+        <nav class="fixed top-0 w-full z-40 glass-panel border-b border-sky-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-20">
+                    <div class="flex-shrink-0 cursor-pointer flex items-center gap-4 group" onclick="triggerPPTMode()">
+                        <div class="relative">
+                            <img src="https://files.catbox.moe/fxdvji.jpg" alt="Sastro" class="h-12 w-12 rounded-full border-2 border-waterMain object-cover shadow-md group-hover:rotate-12 transition-transform">
+                        </div>
+                        <div class="hidden sm:block text-left">
+                            <p class="font-heading font-black text-waterDeep text-sm uppercase">Sastro Negoro</p>
+                            <p class="text-[10px] text-waterMain font-bold tracking-widest mt-1 uppercase">SMK PGRI 1 Giri</p>
+                        </div>
+                    </div>
+                    <div class="font-heading font-extrabold text-xl tracking-tighter text-waterMain hidden md:block uppercase">Edukasi Renang Lengkap</div>
+                    <button type="button" onclick="toggleSidebar()" class="bg-waterLight text-waterDeep w-12 h-12 rounded-2xl flex items-center justify-center transition-all hover:bg-waterMain hover:text-white"><i class="fas fa-bars-staggered"></i></button>
+                </div>
+            </div>
+        </nav>
+
+        <div id="sidebar" class="fixed inset-y-0 right-0 w-80 bg-white z-50 transform translate-x-full shadow-2xl flex flex-col border-l border-sky-100 transition-transform duration-300">
+            <div class="p-8 flex justify-between items-center bg-waterDeep text-white">
+                <h3 class="font-heading text-xl font-black uppercase">Navigasi</h3>
+                <button type="button" onclick="toggleSidebar()"><i class="fas fa-times text-2xl hover:rotate-90 transition-transform"></i></button>
+            </div>
+            <div class="flex flex-col p-8 space-y-6 font-bold text-waterDeep uppercase text-sm overflow-y-auto h-full text-left">
+                <a href="#pengertian" onclick="toggleSidebar()" class="hover:text-waterCyan flex items-center gap-4"><i class="fas fa-info-circle text-waterMain w-6"></i> 1. Pengertian</a>
+                <a href="#sejarah" onclick="toggleSidebar()" class="hover:text-waterCyan flex items-center gap-4"><i class="fas fa-landmark text-waterMain w-6"></i> 2. Sejarah</a>
+                <a href="#macam" onclick="toggleSidebar()" class="hover:text-waterCyan flex items-center gap-4"><i class="fas fa-swimmer text-waterMain w-6"></i> 3. Macam Gaya</a>
+                <a href="#teknik" onclick="toggleSidebar()" class="hover:text-waterCyan flex items-center gap-4"><i class="fas fa-dumbbell text-waterMain w-6"></i> 4. Teknik Dasar</a>
+                <a href="#standar" onclick="toggleSidebar()" class="hover:text-waterCyan flex items-center gap-4"><i class="fas fa-ruler-combined text-waterMain w-6"></i> 5. Standar Kolam</a>
+                <a href="#peraturan" onclick="toggleSidebar()" class="hover:text-waterCyan flex items-center gap-4"><i class="fas fa-flag text-waterMain w-6"></i> 6. Peraturan</a>
+                <a href="#tujuan" onclick="toggleSidebar()" class="hover:text-waterCyan flex items-center gap-4"><i class="fas fa-heart-pulse text-waterMain w-6"></i> 7. Manfaat</a>
+                <a href="#nutrisi" onclick="toggleSidebar()" class="hover:text-waterCyan flex items-center gap-4"><i class="fas fa-apple-alt text-waterMain w-6"></i> 8. Nutrisi</a>
+                <a href="#dryland" onclick="toggleSidebar()" class="hover:text-waterCyan flex items-center gap-4"><i class="fas fa-running text-waterMain w-6"></i> 9. Dryland</a>
+                <a href="#keselamatan" onclick="toggleSidebar()" class="hover:text-waterCyan flex items-center gap-4"><i class="fas fa-life-ring text-waterMain w-6"></i> 10. Keselamatan</a>
+            </div>
+        </div>
+
+        <main class="max-w-4xl mx-auto px-6 pt-32 space-y-24 text-center">
+            <div class="text-center animate-slide-up">
+                <span class="bg-waterLight text-waterMain px-4 py-2 rounded-full font-black text-xs uppercase tracking-widest mb-6 inline-block uppercase">Kurikulum SMK PGRI 1 Giri</span>
+                <h1 class="font-heading text-5xl md:text-7xl font-black mb-8 text-waterDeep leading-none tracking-tighter uppercase">Olahraga Akuatik <br><span class="water-gradient">Renang Modern</span></h1>
+                <img src="https://images.unsplash.com/photo-1530549387631-afb16881127e?q=80&w=2070&auto=format&fit=crop" alt="Berenang di Kolam" class="w-full h-[450px] object-cover rounded-[3rem] shadow-2xl border-8 border-white">
+            </div>
+
+            <article class="space-y-20 text-gray-700 leading-relaxed text-lg text-left">
+                <!-- 1. PENGERTIAN -->
+                <section id="pengertian" class="bg-white p-10 rounded-[3rem] shadow-xl border border-sky-50 relative">
+                    <h2 class="font-heading text-3xl font-black text-waterDeep mb-6 flex items-center gap-4 uppercase tracking-tighter"><span class="w-12 h-12 bg-waterMain text-white rounded-2xl flex items-center justify-center text-xl text-center"><i class="fas fa-book"></i></span> 1. Pengertian Renang</h2>
+                    <p class="font-medium text-gray-600 mb-6 text-left">Renang adalah upaya untuk menggerakkan (mengapungkan atau mengangkat) semua bagian tubuh ke atas permukaan air. Olahraga ini menggunakan koordinasi menyeluruh antara tarikan tangan, tendangan kaki, dan manajemen napas untuk melaju di dalam air tanpa hambatan yang berarti.</p>
+                    <button type="button" onclick="generateSummary()" id="btn-summary" class="bg-waterMain text-white px-10 py-4 rounded-2xl font-black transition-all flex items-center gap-3 shadow-lg uppercase text-xs hover:bg-waterDeep">
+                        <i class="fas fa-sparkles"></i> Ringkasan AI Sastro
+                    </button>
+                    <div id="summary-container" class="mt-6 hidden p-8 bg-sky-50 border-2 border-dashed border-sky-200 rounded-3xl text-waterDeep italic font-bold">
+                        <div id="summary-content" class="space-y-2"></div>
+                    </div>
+                </section>
+
+                <!-- 2. SEJARAH -->
+                <section id="sejarah" class="space-y-6">
+                    <h2 class="font-heading text-3xl font-black text-waterDeep uppercase tracking-tighter">2. Sejarah Singkat</h2>
+                    <p class="font-medium text-gray-600 text-left">Berenang telah dikenal sejak masa prasejarah. Bukti tertua mengenai berenang adalah lukisan-lukisan dari Zaman Batu di "Gua Perenang" dekat Wadi Sora di Mesir barat daya. Secara kompetitif, renang modern dimulai di London sekitar tahun 1837. Federasi Renang Internasional (FINA) kemudian dibentuk pada tahun 1908 sebagai standar global.</p>
+                </section>
+
+                <!-- 3. MACAM GAYA -->
+                <section id="macam" class="space-y-10 text-center">
+                    <h2 class="font-heading text-3xl font-black text-waterDeep uppercase tracking-tighter">3. Empat Gaya Utama</h2>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-white p-8 rounded-[2.5rem] shadow-lg border border-sky-50 text-left">
+                            <h3 class="font-heading text-xl font-bold mb-3 text-waterDeep">Gaya Bebas (Freestyle)</h3>
+                            <p class="text-sm font-medium text-gray-500">Gaya paling efisien dan tercepat. Posisi dada menghadap permukaan air dengan gerakan tangan mengayuh bergantian ke depan secara kontinu.</p>
+                        </div>
+                        <div class="bg-white p-8 rounded-[2.5rem] shadow-lg border border-sky-50 text-left">
+                            <h3 class="font-heading text-xl font-bold mb-3 text-waterDeep">Gaya Dada (Breaststroke)</h3>
+                            <p class="text-sm font-medium text-gray-500">Gaya katak. Stabil dan mudah dilakukan bagi pemula karena posisi wajah sering di atas air.</p>
+                        </div>
+                        <div class="bg-white p-8 rounded-[2.5rem] shadow-lg border border-sky-50 text-left">
+                            <h3 class="font-heading text-xl font-bold mb-3 text-waterDeep">Gaya Punggung (Backstroke)</h3>
+                            <p class="text-sm font-medium text-gray-500">Berenang dengan punggung menghadap air. Wajah di atas air mempermudah pernapasan dan baik untuk terapi tulang belakang.</p>
+                        </div>
+                        <div class="bg-white p-8 rounded-[2.5rem] shadow-lg border border-sky-50 text-left">
+                            <h3 class="font-heading text-xl font-bold mb-3 text-waterDeep">Gaya Kupu-kupu (Butterfly)</h3>
+                            <p class="text-sm font-medium text-gray-500">Gaya terberat yang mengandalkan ayunan kedua lengan bersamaan dan tendangan kaki lumba-lumba.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. TEKNIK DASAR -->
+                <section id="teknik" class="bg-sky-50 p-10 rounded-[3rem] border border-sky-100 text-left">
+                    <h2 class="font-heading text-3xl font-black text-waterDeep mb-8 uppercase tracking-tighter">4. Teknik Dasar Pemula</h2>
+                    <div class="space-y-6">
+                        <div class="flex gap-4 items-start text-left">
+                            <div class="w-10 h-10 bg-waterMain text-white rounded-full flex items-center justify-center shrink-0 font-black text-center">A</div>
+                            <p class="text-gray-600"><strong>Pernapasan:</strong> Menghirup udara secepat mungkin melalui mulut saat di atas air dan membuangnya perlahan melalui hidung di dalam air.</p>
+                        </div>
+                        <div class="flex gap-4 items-start text-left">
+                            <div class="w-10 h-10 bg-waterMain text-white rounded-full flex items-center justify-center shrink-0 font-black text-center">B</div>
+                            <p class="text-gray-600"><strong>Meluncur:</strong> Menggunakan tolakan kaki dari dinding kolam untuk mendapatkan momentum awal. Tangan lurus ke depan menjepit telinga.</p>
+                        </div>
+                        <div class="flex gap-4 items-start text-left">
+                            <div class="w-10 h-10 bg-waterMain text-white rounded-full flex items-center justify-center shrink-0 font-black text-center">C</div>
+                            <p class="text-gray-600"><strong>Mengapung:</strong> Kemampuan merilekskan otot tubuh agar tetap sejajar dengan permukaan air tanpa gerakan aktif yang berlebihan.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. STANDAR KOLAM -->
+                <section id="standar" class="space-y-6 text-left">
+                    <h2 class="font-heading text-3xl font-black text-waterDeep uppercase tracking-tighter">5. Standar Kolam Internasional (FINA)</h2>
+                    <p class="font-medium text-gray-600">Kolam standar Olimpiade memiliki panjang 50 meter dan lebar 25 meter. Kedalaman minimal adalah 2 meter dengan suhu air dipertahankan antara 25°C hingga 28°C untuk menjaga performa otot atlet dan memecah ombak dari lintasan 1 dan 8 (lintasan kosong).</p>
+                </section>
+
+                <!-- 6. PERATURAN -->
+                <section id="peraturan" class="bg-white p-10 rounded-[3rem] shadow-xl border border-sky-50 relative">
+                    <h2 class="font-heading text-3xl font-black text-waterDeep mb-6 uppercase tracking-tighter">6. Peraturan Perlombaan</h2>
+                    <ul class="list-disc pl-6 space-y-3 font-medium text-gray-600">
+                        <li><strong>Start:</strong> Gaya bebas, dada, dan kupu-kupu dilakukan di atas balok start (loncat). Gaya punggung dimulai dari dalam air menghadap dinding.</li>
+                        <li><strong>Pembalikan (Turn):</strong> Atlet wajib menyentuh dinding saat berbalik. Gaya bebas dan punggung menggunakan <em>tumble turn</em> (salto), sedangkan dada dan kupu-kupu harus menyentuh dinding dengan kedua tangan bersamaan.</li>
+                        <li><strong>Diskualifikasi:</strong> Melakukan start sebelum peluit berbunyi (false start), berjalan di dasar kolam, atau menarik tali lintasan.</li>
+                    </ul>
+                </section>
+
+                <!-- 7. MANFAAT -->
+                <section id="tujuan" class="bg-waterDeep p-10 rounded-[4rem] text-white shadow-2xl text-left">
+                    <h2 class="font-heading text-3xl font-black mb-10 border-b border-white/20 pb-6 uppercase tracking-tighter italic">7. Manfaat Jasmani & Rohani</h2>
+                    <ul class="space-y-4 font-bold text-left text-sky-100">
+                        <li class="flex gap-4"><i class="fas fa-heartbeat mt-1 text-waterCyan text-2xl"></i> Kardiovaskular Kuat: Melatih jantung memompa lebih efisien dan memperbesar volume paru-paru.</li>
+                        <li class="flex gap-4"><i class="fas fa-fire mt-1 text-waterCyan text-2xl"></i> Membakar Kalori: 500-700 kalori per jam, sangat cocok untuk program diet sehat.</li>
+                        <li class="flex gap-4"><i class="fas fa-brain mt-1 text-waterCyan text-2xl"></i> Penawar Stres: Sensasi mengambang menekan hormon kortisol dan memberikan efek rileks di otak.</li>
+                    </ul>
+                </section>
+
+                <!-- 8. NUTRISI -->
+                <section id="nutrisi" class="space-y-6 text-left">
+                    <h2 class="font-heading text-3xl font-black text-waterDeep uppercase tracking-tighter">8. Nutrisi & Pola Makan Perenang</h2>
+                    <p class="font-medium text-gray-600">Renang membakar kalori secara masif. Maka, 1-2 jam sebelum berenang, disarankan makan karbohidrat kompleks (roti gandum, pisang) untuk cadangan energi. Setelah berenang, konsumsi protein tinggi (telur, susu) dalam waktu 30 menit pertama untuk pemulihan dan pembentukan sel otot yang sobek (micro-tears).</p>
+                </section>
+
+                <!-- 9. LATIHAN DARAT -->
+                <section id="dryland" class="bg-sky-50 p-10 rounded-[3rem] border border-sky-100 text-left">
+                    <h2 class="font-heading text-3xl font-black text-waterDeep mb-6 uppercase tracking-tighter">9. Latihan Fisik Darat (Dryland)</h2>
+                    <p class="font-medium text-gray-600 mb-4">Atlet renang tidak hanya berlatih di air. Otot inti (core) dan bahu harus dilatih di darat agar dorongan di air maksimal. Menu latihan yang direkomendasikan:</p>
+                    <ul class="list-disc pl-6 font-medium text-gray-600 space-y-2">
+                        <li><strong>Plank & Crunch:</strong> Memperkuat otot perut untuk menjaga keseimbangan gaya bebas.</li>
+                        <li><strong>Pull-up & Push-up:</strong> Menambah daya tarik otot punggung dan lengan (Latissimus Dorsi).</li>
+                        <li><strong>Squat Jump:</strong> Memperkuat ledakan daya tolak kaki saat start dan putaran di dinding kolam.</li>
+                    </ul>
+                </section>
+
+                <!-- 10. KESELAMATAN AIR -->
+                <section id="keselamatan" class="bg-red-50 p-10 rounded-[3rem] border border-red-100 text-left">
+                    <h2 class="font-heading text-3xl font-black text-red-700 mb-6 uppercase tracking-tighter"><i class="fas fa-life-ring"></i> 10. Dasar Keselamatan Air (Water Rescue)</h2>
+                    <p class="font-medium text-gray-700 mb-4">Utamakan selalu prosedur keselamatan untuk mencegah hal fatal:</p>
+                    <ul class="list-none space-y-4">
+                        <li class="bg-white p-4 rounded-xl border border-red-200"><strong>1. Menolong Korban:</strong> Gunakan metode <strong>Reach</strong> (julurkan kayu) atau <strong>Throw</strong> (lemparkan pelampung). JANGAN TERJUN jika Anda tidak memiliki lisensi SAR. Korban yang panik bisa menenggelamkan Anda.</li>
+                        <li class="bg-white p-4 rounded-xl border border-red-200"><strong>2. Penanganan Kram:</strong> Jangan panik. Posisikan tubuh mengapung telentang agar bisa bernapas, lalu tarik ujung telapak kaki yang kram ke arah lutut Anda perlahan.</li>
+                        <li class="bg-white p-4 rounded-xl border border-red-200"><strong>3. Pencegahan:</strong> Selalu lakukan stretching 10 menit sebelum masuk ke kolam yang dingin.</li>
+                    </ul>
+                </section>
+            </article>
+
+            <!-- PENULIS -->
+            <section id="penulis" class="pt-24 border-t-2 border-sky-100 text-center">
+                <div class="glass-panel p-12 rounded-[3.5rem] flex flex-col md:flex-row items-center gap-12 border-2 border-white shadow-2xl mx-auto max-w-2xl">
+                    <img src="https://files.catbox.moe/fxdvji.jpg" alt="Penulis Sastro" class="w-56 h-56 rounded-[3rem] border-8 border-white shadow-2xl object-cover rotate-3">
+                    <div class="text-center md:text-left space-y-4">
+                        <h2 class="font-heading text-4xl font-black text-waterDeep leading-none uppercase tracking-tighter">Moh Agus Sastro Negoro</h2>
+                        <p class="text-waterMain font-extrabold uppercase tracking-[0.3em] text-sm">Penulis Materi & Siswa XI TJKT 2</p>
+                        <p class="italic text-gray-500 font-medium border-l-4 border-waterMain pl-4 mt-4">"Menjadi perenang yang baik bukan hanya tentang seberapa cepat kita sampai di ujung kolam, melainkan seberapa tenang kita menghadapi kedalaman air."</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="mt-32 py-12 text-center border-t border-sky-100 w-full">
+            <p class="text-waterDeep font-heading font-black text-lg uppercase">&copy; 2026 Sastro Negoro | SMK PGRI 1 Giri</p>
+        </footer>
+
+        <!-- HOST REMOTE ACTIVATION (MOVED TO ARTICLE MODE) -->
+        <div class="fixed bottom-8 left-8 z-40 flex flex-col items-start gap-4 text-left">
+            <div id="host-code-display" class="hidden bg-white border-2 border-waterMain text-waterDeep px-6 py-4 rounded-2xl shadow-2xl transition-all">
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Kode Pairing HP (Mic):</p>
+                <p class="text-2xl font-black tracking-[0.2em] text-center" id="host-code-text">SRZM-XXXX</p>
+            </div>
+            <button type="button" id="btn-activate-host" onclick="initHostRemote()" class="bg-white border-2 border-waterMain text-waterMain px-6 py-3 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:bg-waterMain hover:text-white transition-all flex items-center gap-3">
+                <i class="fas fa-mobile-alt text-lg"></i> Sambungkan Mic HP
+            </button>
+        </div>
+
+        <button type="button" id="music-btn" onclick="toggleMusic()" class="fixed bottom-8 right-8 w-16 h-16 bg-white border-2 border-waterMain rounded-2xl flex items-center justify-center text-waterMain z-40 shadow-2xl text-center hover:scale-110 transition-transform"><i class="fas fa-play text-xl text-center" id="music-icon"></i></button>
+        <button type="button" id="ai-chat-btn" onclick="toggleChat()" class="fixed bottom-28 right-8 w-16 h-16 bg-white border-2 border-waterCyan rounded-2xl flex items-center justify-center text-waterCyan z-40 shadow-2xl text-center hover:scale-110 transition-transform"><i class="fas fa-robot text-xl text-center"></i></button>
+        
+        <!-- AI CHAT PANEL -->
+        <div id="ai-chat-panel" class="fixed bottom-48 right-8 w-80 max-w-[85vw] h-[500px] bg-white rounded-[2.5rem] border border-sky-100 z-50 flex-col hidden shadow-2xl overflow-hidden">
+            <div class="p-6 border-b bg-waterDeep text-white flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-left"><i class="fas fa-bolt text-waterCyan"></i></div>
+                    <h3 class="font-heading font-black text-sm uppercase">Sastro AI</h3>
+                </div>
+                <button type="button" onclick="toggleChat()"><i class="fas fa-times text-left hover:rotate-90 transition-transform"></i></button>
+            </div>
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-5 space-y-4 text-sm bg-sky-50/20 flex flex-col scroll-smooth font-medium">
+                <div class="bg-white p-4 rounded-2xl rounded-tl-none self-start max-w-[90%] text-waterDeep shadow-sm border border-sky-50 text-left">
+                    Halo! Ada yang bisa saya bantu terkait gaya renang, tugas TJKT, atau lainnya? 🏊‍♂️
+                </div>
+            </div>
+            <div class="p-5 bg-white border-t border-sky-50 flex gap-3">
+                <input type="text" id="chat-input" onkeypress="handleChatEnter(event)" placeholder="Ketik pesan..." class="flex-1 bg-sky-50 border-2 border-transparent focus:border-waterMain rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all text-left">
+                <button type="button" onclick="sendMessage()" class="bg-waterMain text-white w-12 h-12 rounded-xl shadow-lg flex items-center justify-center hover:bg-waterDeep transition-colors"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- PPT PROMPT & ENHANCED FACE ID -->
+    <div id="code-prompt-overlay" class="fixed inset-0 bg-waterDeep/95 z-[60] hidden flex items-center justify-center backdrop-blur-2xl text-center">
+        <!-- CODE CARD -->
+        <div id="prompt-main-card" class="bg-white p-12 rounded-[3.5rem] text-center shadow-2xl max-w-sm w-full animate-slide-up border-b-[10px] border-b-waterMain mx-auto">
+            <h3 class="font-heading text-2xl font-black text-waterDeep mb-6 uppercase text-center w-full">Akses Presentasi</h3>
+            <div id="code-section" class="w-full">
+                <input type="password" id="access-code" placeholder="STRNXXXX" class="w-full bg-sky-50 border-2 border-sky-100 rounded-2xl px-5 py-4 text-center mb-6 font-black tracking-[0.5em] focus:border-waterMain outline-none text-waterDeep">
+                <button type="button" onclick="validateCode()" class="w-full py-4 bg-waterMain text-white font-black rounded-2xl shadow-xl uppercase mb-4 tracking-widest text-xs text-center hover:bg-waterDeep transition-all">Validasi Kode</button>
+            </div>
+            <div class="flex items-center gap-4 mb-4"><hr class="flex-1 border-sky-100"> <span class="text-xs font-bold text-gray-300">ATAU</span> <hr class="flex-1 border-sky-100"></div>
+            <button type="button" onclick="startFaceID()" class="w-full py-4 bg-sky-50 text-waterMain border-2 border-waterMain font-black rounded-2xl hover:bg-waterMain hover:text-white transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 text-center mx-auto"><i class="fas fa-face-viewfinder text-center text-lg"></i> Face ID Scan</button>
+            <p id="code-error" class="text-red-500 text-xs mt-6 font-black hidden uppercase text-center w-full">Akses Ditolak!</p>
+            <button type="button" onclick="closeCodePrompt()" class="mt-4 text-gray-400 font-bold uppercase text-[10px] tracking-widest hover:text-gray-600">Batal</button>
+        </div>
+
+        <!-- FACE ID SCANNER (ENHANCED) -->
+        <div id="face-id-card" class="bg-black/95 p-8 rounded-[3.5rem] text-center shadow-2xl max-w-sm w-full hidden border-4 border-waterCyan relative overflow-hidden mx-auto">
+            <h3 class="font-heading text-lg font-black text-waterCyan mb-6 uppercase tracking-widest text-center w-full"><i class="fas fa-lock mr-2"></i> Sistem Biometrik</h3>
+            
+            <div class="relative w-full aspect-square rounded-[2rem] bg-gray-900 border-2 border-waterCyan overflow-hidden mb-6 mx-auto shadow-[0_0_30px_rgba(34,211,238,0.4)]">
+                <video id="webcam" class="w-full h-full object-cover scale-x-[-1] text-center filter contrast-125" autoplay playsinline muted></video>
+                <!-- Animation Grid & Bracket -->
+                <div class="scanning-grid"></div>
+                <div class="face-bracket fb-tl"></div><div class="face-bracket fb-tr"></div>
+                <div class="face-bracket fb-bl"></div><div class="face-bracket fb-br"></div>
+                <!-- Moving Laser Line -->
+                <div class="scanner-line"></div>
+            </div>
+            
+            <p id="scan-status" class="text-white/80 text-sm font-black uppercase tracking-widest animate-pulse transition-colors duration-300">Menyiapkan Kamera...</p>
+            <p id="scan-detail" class="text-waterCyan text-[10px] mt-2 font-mono tracking-widest">Sys: Standby</p>
+            
+            <button type="button" onclick="cancelFaceID()" class="mt-6 text-white/40 hover:text-white text-xs font-bold uppercase text-center w-full transition-colors">Batalkan</button>
+        </div>
+    </div>
+
+    <!-- PPT WELCOME SCREEN -->
+    <div id="ppt-welcome" class="fixed inset-0 bg-waterDeep/95 z-[70] hidden flex flex-col items-center justify-center text-center backdrop-blur-xl">
+        <div class="w-56 h-56 md:w-72 md:h-72 rounded-full p-3 bg-gradient-to-tr from-waterMain to-waterCyan animate-slide-up shadow-[0_0_80px_rgba(34,211,238,0.8)] mb-10">
+            <img src="https://files.catbox.moe/fxdvji.jpg" alt="Sastro Negoro Welcome" class="w-full h-full rounded-full object-cover border-8 border-white shadow-inner">
+        </div>
+        <h1 class="font-heading text-4xl md:text-6xl text-white font-black tracking-tighter uppercase mb-4 animate-slide-up" style="animation-delay: 0.2s;">Selamat Datang</h1>
+        <h2 class="font-heading text-5xl md:text-7xl text-waterCyan font-black uppercase tracking-widest animate-slide-up" style="animation-delay: 0.4s;">Sastro Negoro</h2>
+        <div class="mt-16 flex space-x-4 animate-slide-up" style="animation-delay: 0.6s;">
+            <div class="w-4 h-4 bg-waterMain rounded-full animate-bounce"></div>
+            <div class="w-4 h-4 bg-waterMain rounded-full animate-bounce" style="animation-delay: 0.1s;"></div>
+            <div class="w-4 h-4 bg-waterMain rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+        </div>
+    </div>
+
+    <!-- PPT CONTAINER -->
+    <div id="ppt-container" class="fixed inset-0 z-[90] hidden ppt-layout select-none text-center" oncontextmenu="return false;">
+        <div class="h-2 bg-white/10 w-full relative"><div id="ppt-progress" class="h-full bg-waterCyan transition-all duration-300" style="width: 0%;"></div></div>
+        
+        <div id="ppt-slide-area" class="ppt-content w-full max-w-6xl mx-auto relative text-center"></div>
+        
+        <!-- FULLSCREEN & EXIT BUTTON (BOTTOM RIGHT) -->
+        <div class="absolute bottom-8 right-8 flex gap-4 z-[100]">
+            <button type="button" onclick="toggleFullScreen()" class="bg-black/30 backdrop-blur text-white w-14 h-14 rounded-2xl hover:bg-waterMain flex items-center justify-center border-2 border-white/20 text-center transition-colors shadow-lg" title="Layar Penuh">
+                <i class="fas fa-expand text-2xl" id="fs-icon"></i>
+            </button>
+            <button type="button" onclick="exitPPTMode()" class="bg-black/30 backdrop-blur text-white w-14 h-14 rounded-2xl hover:bg-red-500 flex items-center justify-center border-2 border-white/20 text-center transition-colors shadow-lg" title="Keluar PPT">
+                <i class="fas fa-times text-2xl text-center"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const validCodes = { 'STRN1788': { name: 'Moh Agus Sastro Negoro', photo: 'https://files.catbox.moe/fxdvji.jpg' } };
+        const bgMusic = document.getElementById('bg-music');
+        const audCurtain = document.getElementById('audio-curtain');
+        const audApplause = document.getElementById('audio-applause');
+        const audWow = document.getElementById('audio-wow');
+        let currentSlideIndex = 0, isPPTMode = false, stream = null, isCurtainOpen = true, isHostBGMPlaying = false, peer = null, conn = null;
+
+        // Set Default Volumes
+        bgMusic.volume = 0.85;
+        const audJarvisAuth = document.getElementById('audio-jarvis-auth');
+        if(audJarvisAuth) audJarvisAuth.volume = 1.0;
+
+        // Expanded 18 Slides Array
+        const pptSlides = [
+            ` <div class="animate-slide-up flex flex-col items-center justify-center w-full text-center mt-10">
+                <i class="fas fa-swimmer text-8xl mb-6 text-waterCyan text-center drop-shadow-[0_0_20px_rgba(34,211,238,0.5)]"></i>
+                <h1 class="font-heading text-4xl md:text-6xl font-black mb-4 uppercase text-center w-full text-white leading-tight">Materi Renang<br><span class="text-waterCyan text-3xl md:text-5xl">SMK PGRI 1 Giri Banyuwangi</span></h1>
+                <div class="relative my-10 mx-auto"><img src="https://files.catbox.moe/fxdvji.jpg" class="w-56 h-56 md:w-64 md:h-64 rounded-full border-8 border-white object-cover shadow-[0_0_50px_rgba(34,211,238,0.7)]" alt="Sastro"></div>
+                <div class="bg-white/10 px-8 py-3 rounded-full border border-white/20"><p class="text-xl font-bold uppercase tracking-widest text-white text-center">Presentasi By Sastro Negoro</p></div>
+              </div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-waterCyan mb-10 uppercase text-center w-full tracking-tighter">01. Konsep Renang</h2><div class="ppt-text-box text-left"><p class="text-2xl leading-relaxed">Renang adalah upaya untuk menggerakkan, mengapungkan, atau mengangkat seluruh bagian tubuh ke atas permukaan air. Olahraga ini melibatkan sinkronisasi mutlak antara sistem pernapasan dan gerak motorik otot secara menyeluruh untuk melaju menembus massa jenis air secara efisien.</p></div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-waterCyan mb-10 uppercase text-center w-full tracking-tighter">02. Histori & Evolusi</h2><div class="ppt-text-box text-left text-2xl leading-relaxed"><ul class="space-y-6"><li><strong class="text-waterCyan">Prasejarah:</strong> Lukisan gua prasejarah di Mesir membuktikan renang sudah ada ribuan tahun lalu untuk bertahan hidup.</li><li><strong class="text-waterCyan">London 1837:</strong> Diakuinya renang sebagai olahraga kompetitif modern pertama.</li><li><strong class="text-waterCyan">Athena 1896:</strong> Renang secara resmi masuk dalam ajang Olimpiade.</li><li><strong class="text-waterCyan">FINA 1908:</strong> Dibentuknya federasi dunia yang menetapkan standarisasi gaya dan kolam renang.</li></ul></div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-waterCyan mb-10 uppercase text-center w-full tracking-tighter">03. Gaya Bebas (Freestyle)</h2><div class="ppt-text-box text-left text-2xl leading-relaxed border-l-8 border-waterCyan"><p class="mb-4">Dada menghadap ke air. Tangan mengayuh bergantian sejauh mungkin ke depan (seperti kincir). Kaki menggunakan gerakan cambuk vertikal konstan (<em>Flutter Kick</em>).</p><p class="italic text-sky-200 text-xl">Fakta: Ini adalah gaya yang paling hidrodinamis, menjadikannya gaya tercepat di dunia dalam renang kompetitif.</p></div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-waterCyan mb-10 uppercase text-center w-full tracking-tighter">04. Gaya Dada (Breaststroke)</h2><div class="ppt-text-box text-left text-2xl leading-relaxed border-l-8 border-waterCyan"><p class="mb-4">Populer dengan sebutan gaya katak. Menggunakan gerakan tangan simetris membuka ke samping setengah lingkaran dan tendangan kaki melebar (<em>Whip Kick</em>).</p><p class="italic text-sky-200 text-xl">Fakta: Gaya yang paling hemat energi dan populer untuk rekreasi karena kepala mudah dijaga tetap di atas air.</p></div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-waterCyan mb-10 uppercase text-center w-full tracking-tighter">05. Gaya Punggung (Backstroke)</h2><div class="ppt-text-box text-left text-2xl leading-relaxed border-l-8 border-waterCyan"><p class="mb-4">Berenang dalam posisi terlentang menghadap langit. Sangat baik untuk rehabilitasi masalah tulang belakang dan postur tubuh yang bungkuk.</p><p class="italic text-sky-200 text-xl">Fakta: Keuntungan utamanya adalah wajah tidak pernah terendam air, sehingga pernapasan tidak terhalang sama sekali.</p></div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-waterCyan mb-10 uppercase text-center w-full tracking-tighter">06. Gaya Kupu-kupu (Butterfly)</h2><div class="ppt-text-box text-left text-2xl leading-relaxed border-l-8 border-waterCyan"><p class="mb-4">Gaya paling ekstrem secara fisik. Menggunakan ayunan kedua lengan simetris secara masif ke depan, diikuti cambukan kaki lumba-lumba (<em>Dolphin Kick</em>) yang kuat.</p><p class="italic text-sky-200 text-xl">Fakta: Gaya artistik ini membutuhkan kekuatan otot bahu dan core yang luar biasa untuk mengangkat separuh badan keluar air.</p></div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-waterCyan mb-10 uppercase text-center w-full tracking-tighter">07. Teknik Dasar: Pernapasan</h2><div class="ppt-text-box text-left text-2xl leading-relaxed"><p>Kunci dari renang adalah ketenangan napas. Hukum emasnya: <strong>Ambil udara melalui mulut (cepat) saat wajah di atas air, dan buang melalui hidung (perlahan/bubbling) saat wajah di dalam air.</strong> Ini akan mencegah Anda tersedak dan menjaga ritme renang stabil.</p></div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-waterCyan mb-10 uppercase text-center w-full tracking-tighter">08. Teknik Dasar: Meluncur & Apung</h2><div class="grid md:grid-cols-2 gap-6 w-full max-w-5xl"><div class="bg-white/10 p-8 rounded-3xl text-left border border-white/10"><h3 class="font-bold text-2xl text-waterCyan mb-4">Meluncur (Gliding)</h3><p class="text-xl">Menolak kuat dinding kolam dengan kaki. Posisi tubuh lurus bagai panah, tangan ke depan mengapit telinga. Ini melatih momentum awal hidrodinamika tubuh.</p></div><div class="bg-white/10 p-8 rounded-3xl text-left border border-white/10"><h3 class="font-bold text-2xl text-waterCyan mb-4">Mengapung (Floating)</h3><p class="text-xl">Belajar merilekskan otot punggung dan perut. Semakin tubuh rileks, udara di paru-paru akan membuat massa jenis tubuh lebih ringan dari air.</p></div></div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-waterCyan mb-10 uppercase text-center w-full tracking-tighter">09. Standar Kolam FINA</h2><div class="ppt-text-box text-left text-2xl leading-relaxed"><ul class="grid grid-cols-2 gap-6"><li class="bg-black/30 p-4 rounded-xl border border-white/10"><strong class="text-waterCyan block mb-1">Panjang:</strong> 50 Meter</li><li class="bg-black/30 p-4 rounded-xl border border-white/10"><strong class="text-waterCyan block mb-1">Lebar:</strong> 25 Meter</li><li class="bg-black/30 p-4 rounded-xl border border-white/10"><strong class="text-waterCyan block mb-1">Kedalaman:</strong> Minimal 2 Meter</li><li class="bg-black/30 p-4 rounded-xl border border-white/10"><strong class="text-waterCyan block mb-1">Suhu Air:</strong> 25°C - 28°C</li></ul><p class="mt-8 text-xl italic text-sky-200">Kolam memiliki 10 lintasan, namun lintasan 1 dan 10 sengaja dibiarkan kosong untuk meredam gelombang ombak dari dinding.</p></div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-waterCyan mb-10 uppercase text-center w-full tracking-tighter">10. Aturan Lomba / Diskualifikasi</h2><div class="ppt-text-box text-left text-2xl leading-relaxed text-red-300 border-red-500"><h3 class="text-red-400 font-bold mb-4"><i class="fas fa-gavel"></i> Hal yang Membatalkan Perlombaan:</h3><ul class="space-y-4"><li><strong>False Start:</strong> Melompat dari balok start sebelum peluit/sirine wasit berbunyi.</li><li><strong>Turn (Pembalikan) Salah:</strong> Gaya dada/kupu tidak menyentuh dinding dengan KEDUA tangan bersamaan saat putar balik.</li><li><strong>Berjalan:</strong> Berdiri atau berjalan di dasar kolam saat perlombaan belum usai.</li></ul></div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-waterCyan mb-10 uppercase text-center w-full tracking-tighter">11. Nutrisi Perenang</h2><div class="ppt-text-box text-left text-2xl leading-relaxed"><p class="mb-4"><strong class="text-waterCyan">Sebelum Renang (Pre-Swim):</strong> 1-2 jam sebelumnya, konsumsi karbohidrat kompleks (oatmeal, pisang, roti gandum) untuk cadangan glikogen/energi jangka panjang.</p><p><strong class="text-waterCyan">Sesudah Renang (Post-Swim):</strong> Masa emas 30-45 menit pertama, wajib konsumsi protein tinggi (telur rebus, susu, dada ayam) untuk memperbaiki otot yang lelah dan robek (micro-tears).</p></div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-waterCyan mb-10 uppercase text-center w-full tracking-tighter">12. Dryland Training (Latihan Darat)</h2><div class="ppt-text-box text-left text-2xl leading-relaxed"><p class="mb-6">Perenang hebat dibentuk di darat. Latihan untuk memperkuat otot inti pendorong air:</p><ul class="space-y-4"><li><strong>Plank & Core:</strong> Menjaga badan tetap sejajar lurus saat di air.</li><li><strong>Pull-Ups:</strong> Membentuk otot Latissimus Dorsi (punggung) untuk daya tarik kayuhan air yang sangat kuat.</li><li><strong>Squat Jump:</strong> Memperkuat ledakan power kaki saat melompat dari balok start.</li></ul></div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-waterCyan mb-10 uppercase text-center w-full tracking-tighter">13. Manfaat Fisik & Mental</h2><div class="grid md:grid-cols-2 gap-6 w-full max-w-5xl"><div class="bg-gradient-to-br from-blue-900 to-blue-700 p-8 rounded-3xl text-left shadow-xl"><h3 class="font-bold text-2xl mb-4"><i class="fas fa-heartbeat text-red-400"></i> Segi Fisik</h3><p class="text-lg">Membakar 500-700 kalori per jam. Memperkuat otot jantung, melebarkan paru-paru, dan membentuk otot tubuh secara merata tanpa risiko cedera sendi (low-impact).</p></div><div class="bg-gradient-to-br from-indigo-900 to-indigo-700 p-8 rounded-3xl text-left shadow-xl"><h3 class="font-bold text-2xl mb-4"><i class="fas fa-brain text-sky-300"></i> Segi Mental</h3><p class="text-lg">Efek mengambang dan suara air di telinga bertindak layaknya meditasi, yang secara ilmiah ampuh menurunkan produksi hormon stres kortisol harian.</p></div></div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-red-500 mb-10 uppercase text-center w-full tracking-tighter">14. Prosedur Tanggap Kram</h2><div class="ppt-text-box text-left text-2xl leading-relaxed border-red-500 bg-red-900/20"><p class="font-bold text-red-400 mb-4 uppercase">ATURAN #1: JANGAN PANIK!</p><p>Jika terjadi kram di tengah kolam: Segera balikkan tubuh menjadi posisi mengapung telentang agar mulut bisa leluasa bernapas. Perlahan, tekuk lutut Anda dan tarik ujung jari-jari kaki ke arah tubuh Anda untuk meregangkan otot betis yang tegang. Setelah mereda, menepi perlahan.</p></div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-red-500 mb-10 uppercase text-center w-full tracking-tighter">15. Dasar Keselamatan (Water Rescue)</h2><div class="ppt-text-box text-left text-2xl leading-relaxed border-red-500 bg-red-900/20"><p class="font-bold text-red-400 mb-4 uppercase">JANGAN MENJADI KORBAN KEDUA.</p><p>Jika melihat seseorang tenggelam, <strong>dilarang keras langsung melompat</strong> jika Anda tidak memiliki lisensi regu penyelamat SAR. Orang panik akan menenggelamkan penolongnya.</p><p class="mt-4">Selalu gunakan metode: <br><strong>REACH</strong> (Julurkan batang bambu/kayu yang panjang) atau <br><strong>THROW</strong> (Lemparkan ban pelampung atau tali dari tepi kolam).</p></div>`,
+            `<h2 class="font-heading text-4xl md:text-5xl font-black text-waterCyan mb-10 uppercase text-center w-full tracking-tighter">16. Kesimpulan Utama</h2><div class="ppt-text-box italic text-3xl text-center leading-relaxed"><br>"Mempelajari renang bukan hanya sebatas mengejar medali. Pada akhirnya, ini adalah satu-satunya olahraga yang dapat <strong>secara langsung menyelamatkan nyawa kita sendiri maupun nyawa orang lain.</strong>"<br><br><span class="text-xl font-black not-italic text-waterCyan mt-8 block tracking-widest">— SASTRO NEGORO</span></div>`,
+            `<div class="animate-slide-up flex flex-col items-center justify-center w-full text-center mt-6"><div class="relative mb-8 mx-auto"><img src="https://files.catbox.moe/fxdvji.jpg" class="w-64 h-64 md:w-72 md:h-72 rounded-[3rem] border-8 border-white object-cover shadow-[0_0_50px_rgba(34,211,238,0.7)] rotate-3" alt="Sastro Tutup"></div><h1 class="font-heading text-4xl md:text-6xl font-black mb-4 uppercase text-center w-full text-white tracking-tighter">Mohon Maaf Jika Adanya<br>Ketidakpahaman</h1><p class="text-3xl text-sky-400 font-black tracking-widest uppercase text-center w-full my-6">Sekian & Terima Kasih</p><div class="w-32 h-1.5 bg-waterCyan rounded-full mx-auto mb-6"></div><p class="text-xl font-bold opacity-60 uppercase tracking-widest text-center w-full">Materi Kelas XI TJKT 2</p></div>`
+        ];
+
+        // --- JS FUNCTIONS ---
+        
+        function unlockAudio() {
+            const audios = [bgMusic, audCurtain, audApplause, audWow, document.getElementById('audio-jarvis-auth')];
+            audios.forEach(a => {
+                if(a) {
+                    a.volume = 0; 
+                    let p = a.play();
+                    if(p !== undefined) {
+                        p.then(() => {
+                            a.pause();
+                            a.currentTime = 0;
+                            // Set volume correctly after unlock
+                            if (a === bgMusic) a.volume = 0.85;
+                            else a.volume = 1.0; 
+                        }).catch(e => console.log("Autoplay dicegah browser, perlu interaksi lebih lanjut."));
+                    }
+                }
+            });
+        }
+
+        async function handleLogin(e) { 
+            e.preventDefault(); 
+            const name = document.getElementById('input-name').value;
+            const displayNameElem = document.getElementById('display-name');
+            if(displayNameElem) displayNameElem.textContent = name; 
+            
+            // Bypass error autoplay via user interaction
+            unlockAudio();
+
+            // Minta Izin Kamera & Mic di awal untuk menghindari reload mendadak
+            try {
+                if(!stream) {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                }
+            } catch (err) {
+                console.warn("Izin kamera/mikrofon ditolak atau tidak ditemukan di awal.");
+            }
+
+            document.getElementById('page-1').classList.add('hidden'); 
+            document.getElementById('welcome-popup').classList.remove('hidden'); 
+            
+            // Mulai Speech Recognition
+            initVoiceCommand();
+        }
+
+        function startArticle() { 
+            document.getElementById('welcome-popup').classList.add('hidden'); 
+            document.getElementById('page-2').classList.remove('hidden'); 
+            // Music no longer plays automatically
+        }
+        function triggerPPTMode() { document.getElementById('code-prompt-overlay').classList.remove('hidden'); document.getElementById('access-code').focus(); }
+        function closeCodePrompt() { cancelFaceID(); document.getElementById('code-prompt-overlay').classList.add('hidden'); document.getElementById('code-error').classList.add('hidden'); }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-open'); }
+        
+        function toggleMusic(f = null) { 
+            if (f === true || (f === null && bgMusic.paused)) { 
+                bgMusic.play().catch(()=>{}); 
+                const icon = document.getElementById('music-icon');
+                if(icon) icon.className = 'fas fa-pause text-xl text-center'; 
+                isHostBGMPlaying = true;
+            } else { 
+                bgMusic.pause(); 
+                const icon = document.getElementById('music-icon');
+                if(icon) icon.className = 'fas fa-play text-xl text-center'; 
+                isHostBGMPlaying = false;
+            } 
+        }
+        
+        function validateCode() { 
+            document.getElementById('code-error').classList.add('hidden');
+            if (document.getElementById('access-code').value.toUpperCase() === 'STRN1788') {
+                proceedToPPT(); 
+            } else { 
+                document.getElementById('code-error').classList.remove('hidden'); 
+            } 
+        }
+
+        // --- FULLSCREEN LOGIC ---
+        function toggleFullScreen() {
+            const docEl = document.documentElement;
+            // Gunakan metode standar untuk browser modern
+            const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+            const exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+                if (requestFS) {
+                    // Try catch digunakan untuk berjaga-jaga jika terblokir oleh iframe policy
+                    requestFS.call(docEl).then(() => {
+                        document.getElementById('fs-icon').classList.replace('fa-expand', 'fa-compress');
+                    }).catch(err => {
+                        console.warn(`Fullscreen diblokir: Pastikan browser/iframe mengizinkan 'allowfullscreen'`);
+                        // Meskipun gagal fullscreen, icon tetap diganti untuk mensimulasikan reaksi
+                    });
+                }
+            } else {
+                if (exitFS) {
+                    exitFS.call(document).then(() => {
+                        document.getElementById('fs-icon').classList.replace('fa-compress', 'fa-expand');
+                    }).catch(err => {
+                        console.warn(`Gagal keluar fullscreen: ${err.message}`);
+                    });
+                }
+            }
+        }
+        
+        // --- FACE ID ANIMATION ENHANCED ---
+        async function startFaceID() {
+            document.getElementById('prompt-main-card').classList.add('hidden');
+            document.getElementById('face-id-card').classList.remove('hidden');
+            try { 
+                if(!stream || !stream.getVideoTracks()[0] || stream.getVideoTracks()[0].readyState === 'ended') {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); 
+                }
+                document.getElementById('webcam').srcObject = stream; 
+                
+                const statusTxt = document.getElementById('scan-status');
+                const detailTxt = document.getElementById('scan-detail');
+                
+                setTimeout(() => { statusTxt.innerText = "MEMINDAI WAJAH..."; detailTxt.innerText = "[|||       ] 30%"; }, 1000);
+                setTimeout(() => { statusTxt.innerText = "MENGANALISIS BIOMETRIK..."; detailTxt.innerText = "[||||||    ] 65%"; }, 2500);
+                setTimeout(() => { statusTxt.innerText = "MENGIDENTIFIKASI DATA..."; detailTxt.innerText = "[||||||||| ] 90%"; }, 4000);
+                setTimeout(() => { 
+                    statusTxt.innerHTML = '<span class="text-green-400">AKSES DIBERIKAN</span>'; 
+                    detailTxt.innerHTML = '<span class="text-green-400">Identitas: Sastro Negoro Terverifikasi</span>'; 
+                    if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                }, 5500);
+                setTimeout(() => { proceedToPPT(); }, 7000); 
+                
+            } catch (e) { alert("Akses Kamera Ditolak/Tidak Ditemukan."); cancelFaceID(); }
+        }
+
+        function cancelFaceID() { 
+            if(stream) stream.getTracks().forEach(t=>t.stop()); 
+            document.getElementById('face-id-card').classList.add('hidden'); 
+            document.getElementById('prompt-main-card').classList.remove('hidden'); 
+            document.getElementById('scan-status').innerText = "Menyiapkan Kamera...";
+            document.getElementById('scan-detail').innerText = "Sys: Standby";
+        }
+        
+        // --- PPT TRANSITION ---
+        function proceedToPPT() {
+            // Matikan HANYA video agar indikator kamera mati, tapi mic tetap jalan untuk Jarvis
+            if(stream) {
+                stream.getVideoTracks().forEach(t=>t.stop());
+            }
+            
+            closeCodePrompt();
+            toggleMusic(false); 
+            document.getElementById('page-2').classList.add('hidden');
+            
+            // SET CURTAIN CLOSED BY DEFAULT IN PPT
+            const curtainSys = document.getElementById('curtain-system');
+            curtainSys.classList.remove('curtain-open');
+            curtainSys.classList.add('curtain-close');
+            isCurtainOpen = false;
+
+            const pptWelcome = document.getElementById('ppt-welcome');
+            pptWelcome.classList.remove('hidden');
+            
+            setTimeout(() => {
+                pptWelcome.classList.add('hidden');
+                isPPTMode = true; 
+                document.body.classList.add('no-scroll'); 
+                document.getElementById('ppt-container').classList.remove('hidden'); 
+                renderSlide('next'); 
+            }, 4500);
+        }
+
+        function renderSlide(d) { 
+            document.getElementById('ppt-progress').style.width = ((currentSlideIndex+1)/pptSlides.length)*100 + '%'; 
+            document.getElementById('ppt-slide-area').innerHTML = `<div class="${d==='next'?'slide-next':'slide-prev'} w-full h-full flex flex-col justify-center text-center items-center mx-auto">${pptSlides[currentSlideIndex]}</div>`; 
+        }
+        function nextSlide() { if(currentSlideIndex < pptSlides.length-1) { currentSlideIndex++; renderSlide('next'); } }
+        function prevSlide() { if(currentSlideIndex > 0) { currentSlideIndex--; renderSlide('prev'); } }
+        function exitPPTMode() { location.reload(); }
+
+        // --- CORE VOICE PROCESSING (DIPAKAI LOKAL & P2P) ---
+        function processVoiceCommand(transcript) {
+            console.log("🗣️ [JARVIS MENDENGAR]: >>> " + transcript + " <<<");
+            
+            if ((transcript.includes('presentasi mode') || transcript.includes('mode presentasi') || transcript.includes('jalankan presentasi')) && !isPPTMode) {
+                const audJarvis = document.getElementById('audio-jarvis-auth');
+                audJarvis.currentTime = 0;
+                
+                let played = false;
+                const triggerFaceID = () => {
+                    if(!played) {
+                        played = true;
+                        document.getElementById('code-prompt-overlay').classList.remove('hidden');
+                        startFaceID();
+                    }
+                };
+                
+                audJarvis.onended = triggerFaceID;
+                audJarvis.onerror = triggerFaceID;
+                
+                const playPromise = audJarvis.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => { triggerFaceID(); });
+                }
+            }
+
+            if (isPPTMode) {
+                if (transcript.includes('selanjutnya') || transcript.includes('berikutnya') || transcript.includes('slide selanjutnya') || transcript.includes('next')) {
+                    nextSlide();
+                }
+                if (transcript.includes('sebelumnya') || transcript.includes('kembali') || transcript.includes('slide sebelumnya') || transcript.includes('prev')) {
+                    prevSlide();
+                }
+
+                if (transcript.includes('buka tirai') || transcript.includes('open tirai') || transcript.includes('tolong buka tirai')) {
+                    if(!isCurtainOpen) {
+                        document.getElementById('curtain-system').classList.replace('curtain-close', 'curtain-open');
+                        audCurtain.currentTime = 0; audCurtain.play();
+                        isCurtainOpen = true;
+                    }
+                }
+
+                if (transcript.includes('tutup tirai') || transcript.includes('close tirai')) {
+                    if(isCurtainOpen) {
+                        document.getElementById('curtain-system').classList.replace('curtain-open', 'curtain-close');
+                        audCurtain.currentTime = 0; audCurtain.play();
+                        isCurtainOpen = false;
+                    }
+                }
+            }
+
+            if (transcript.includes('putar musik') || transcript.includes('play audio bg') || transcript.includes('musik background') || transcript.includes('nyalakan musik')) {
+                toggleMusic(true);
+            }
+            if (transcript.includes('matikan musik') || transcript.includes('stop musik') || transcript.includes('hentikan musik')) {
+                toggleMusic(false);
+            }
+        }
+
+        // --- VOICE RECOGNITION (JARVIS LOCAL) ---
+        let recognition;
+        function initVoiceCommand() {
+            window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!window.SpeechRecognition) return;
+            
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.lang = 'id-ID';
+            recognition.interimResults = false;
+
+            recognition.onstart = function() {
+                const indicator = document.getElementById('voice-indicator');
+                if(indicator) indicator.classList.remove('opacity-0');
+            };
+
+            recognition.onresult = function(event) {
+                const current = event.resultIndex;
+                const transcript = event.results[current][0].transcript.toLowerCase();
+                processVoiceCommand(transcript);
+            };
+
+            recognition.onerror = function(event) {
+                // Sembunyikan pesan error 'no-speech' di console agar lebih bersih
+                if (event.error !== 'no-speech' && event.error !== 'not-allowed') {
+                    console.warn("Speech Recognition Info:", event.error);
+                }
+            };
+
+            recognition.onend = function() {
+                try { recognition.start(); } catch(e){}
+            };
+
+            try { recognition.start(); } catch(e){}
+        }
+
+        // --- REMOTE P2P & P2P VOICE ---
+        function openRemoteApp() { document.getElementById('remote-app').classList.remove('hidden'); bgMusic.pause(); }
+        function closeRemoteApp() { if(peer) peer.destroy(); document.getElementById('remote-app').classList.add('hidden'); }
+        
+        let remoteRecognition;
+        function initRemoteVoiceCommand() {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SR) {
+                console.warn("Browser HP tidak mendukung Speech Recognition.");
+                return;
+            }
+            remoteRecognition = new SR();
+            remoteRecognition.continuous = true;
+            remoteRecognition.lang = 'id-ID';
+            remoteRecognition.interimResults = false;
+            remoteRecognition.onresult = (e) => {
+                const transcript = e.results[e.resultIndex][0].transcript.toLowerCase();
+                console.log("📱 [MIC HP MENANGKAP]: " + transcript);
+                // Kirim hasil tangkapan suara mic HP ke PC
+                if (conn && conn.open) conn.send({type: 'VOICE', text: transcript});
+            };
+            remoteRecognition.onerror = (e) => {
+                if (e.error !== 'no-speech' && e.error !== 'not-allowed') {
+                    console.warn("Speech Recognition HP Error:", e.error);
+                }
+            };
+            remoteRecognition.onend = () => { try { remoteRecognition.start(); } catch(e){} };
+            try { remoteRecognition.start(); } catch(e){}
+        }
+
+        function connectRemote() {
+            const code = document.getElementById('remote-code-input').value; if(code.length !== 4) return;
+            const btn = document.getElementById('btn-connect-remote'); btn.innerText = "Pairing...";
+            
+            // Minta izin mic HP segera saat tombol ditekan (Wajib untuk bypass blokir browser HP)
+            initRemoteVoiceCommand();
+            
+            peer = new Peer(); peer.on('open', () => { 
+                conn = peer.connect('SRZM-' + code); 
+                conn.on('open', () => { 
+                    document.getElementById('remote-login').classList.add('hidden'); 
+                    document.getElementById('remote-controller').classList.remove('hidden'); 
+                    document.getElementById('remote-controller').classList.add('flex'); 
+                    document.getElementById('connection-toast').classList.add('shrink-icon'); 
+                }); 
+            });
+        }
+
+        function initHostRemote() {
+            const btn = document.getElementById('btn-activate-host'); 
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin text-xl"></i>`; 
+            btn.disabled = true;
+            const code = Math.floor(1000 + Math.random() * 9000).toString();
+            peer = new Peer('SRZM-' + code);
+            peer.on('open', (id) => { btn.classList.add('hidden'); document.getElementById('host-code-display').classList.remove('hidden'); document.getElementById('host-code-text').innerText = id; });
+            peer.on('connection', (c) => { 
+                conn = c; 
+                document.getElementById('host-code-display').innerHTML = `<i class="fas fa-check-circle text-green-500 text-3xl mb-2"></i><br><span class="font-bold text-sm text-slate-700">HP TERSAMBUNG</span>`; 
+                setTimeout(()=>document.getElementById('host-code-display').classList.add('hidden'), 3000); 
+                conn.on('data', executeHostCommand); 
+            });
+        }
+
+        function sendCmd(c, e) { 
+            if(navigator.vibrate) navigator.vibrate(50); 
+            if(e){e.classList.add('remote-btn-active'); setTimeout(()=>e.classList.remove('remote-btn-active'), 150);} 
+            if(conn && conn.open) conn.send(c); 
+        }
+
+        function executeHostCommand(data) {
+            // Cek jika perintah berbentuk teks (dari Voice HP)
+            if (typeof data === 'object' && data.type === 'VOICE') {
+                console.log("📡 [TERIMA DARI HP]: " + data.text);
+                processVoiceCommand(data.text);
+                return;
+            }
+
+            // Command tombol manual
+            const c = data;
+            if(!isPPTMode) return;
+            if(c==='PREV') prevSlide(); if(c==='NEXT') nextSlide();
+            if(c==='CURTAIN') { const s = document.getElementById('curtain-system'); audCurtain.currentTime=0; audCurtain.play(); if(isCurtainOpen) { s.classList.replace('curtain-open','curtain-close'); } else { s.classList.replace('curtain-close','curtain-open'); } isCurtainOpen = !isCurtainOpen; }
+            if(c==='APPLAUSE') { audApplause.currentTime=0; audApplause.play();} if(c==='WOW') {audWow.currentTime=0; audWow.play();}
+            if(c==='BGM') { if(isHostBGMPlaying) { bgMusic.pause(); isHostBGMPlaying = false; } else { bgMusic.play().catch(()=>{}); isHostBGMPlaying = true; } }
+        }
+
+        function toggleSecretMenu() {
+            if(navigator.vibrate) navigator.vibrate(80);
+            const n = document.getElementById('remote-nav-area'), s = document.getElementById('special-menu');
+            if(n.classList.contains('remote-nav-shrink')) { n.classList.remove('remote-nav-shrink'); s.classList.replace('h-64','h-0'); s.classList.replace('opacity-100','opacity-0'); }
+            else { n.classList.add('remote-nav-shrink'); s.classList.replace('h-0','h-64'); s.classList.replace('opacity-0','opacity-100'); }
+        }
+
+        // Bubbles BG
+        function genBubbles() {
+            const cont = document.getElementById('bubble-container');
+            for(let i=0; i<20; i++){
+                const b = document.createElement('div'); b.className = 'bubble';
+                const s = Math.random()*50+10; b.style.width = s+'px'; b.style.height = s+'px';
+                b.style.left = Math.random()*100+'vw'; b.style.animationDelay = Math.random()*10+'s';
+                cont.appendChild(b);
+            }
+        }
+        
+        window.addEventListener('load', () => {
+            genBubbles();
+        });
+
+        // AI Summary & Chat
+        const apiKey = "";
+        async function callGemini(p, s) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            try { const r = await fetch(url, { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contents: [{ parts: [{ text: p }] }], systemInstruction: { parts: [{ text: s }] } }) }); const d = await r.json(); return d.candidates[0].content.parts[0].text; } catch (e) { return "Koneksi AI gagal. Coba lagi nanti."; }
+        }
+        async function generateSummary() {
+            const btn = document.getElementById('btn-summary'); btn.innerText = "MERANGKUM...";
+            document.getElementById('summary-container').classList.remove('hidden');
+            const resp = await callGemini("Ringkas materi renang di atas dalam 3 poin kuat yang informatif untuk pemula.", "Anda adalah Sastro Negoro.");
+            document.getElementById('summary-content').innerHTML = resp.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            btn.innerHTML = `<i class="fas fa-check"></i> SELESAI`;
+        }
+        function toggleChat() { document.getElementById('ai-chat-panel').classList.toggle('chat-open'); }
+        function handleChatEnter(e) { if(e.key==='Enter') sendMessage(); }
+        async function sendMessage() {
+            const inp = document.getElementById('chat-input');
+            const msg = inp.value.trim(); if(!msg) return;
+            const box = document.getElementById('chat-messages');
+            box.innerHTML += `<div class="bg-waterMain text-white p-4 rounded-2xl self-end max-w-[90%] shadow-md text-left">${msg}</div>`;
+            inp.value = ''; box.scrollTop = box.scrollHeight;
+            const resp = await callGemini(msg, "Anda adalah Sastro Negoro, ahli renang SMK PGRI 1 Giri yang ramah.");
+            box.innerHTML += `<div class="bg-white p-4 rounded-2xl self-start max-w-[90%] text-waterDeep shadow-sm border border-sky-50 text-left">${resp.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // PPT Keyboard & Spacebar Control
+        document.getElementById('ppt-container').addEventListener('mousedown', (e) => { if(!e.target.closest('button')) { if(e.clientX > window.innerWidth/2) nextSlide(); else prevSlide(); } });
+        
+        document.addEventListener('keydown', (e) => { 
+            if(!isPPTMode) return; 
+            
+            if(e.key === ' ' || e.code === 'Space') {
+                e.preventDefault(); // Mencegah layar ter-scroll ke bawah
+                if(!isCurtainOpen) {
+                    // Jika tirai tertutup, spasi digunakan untuk membuka tirai
+                    const s = document.getElementById('curtain-system');
+                    s.classList.replace('curtain-close','curtain-open');
+                    audCurtain.currentTime=0; audCurtain.play();
+                    isCurtainOpen = true;
+                } else {
+                    // Jika tirai sudah terbuka, spasi digunakan untuk lanjut slide
+                    nextSlide();
+                }
+                return;
+            }
+
+            if(e.key === 'ArrowRight') nextSlide(); 
+            if(e.key === 'ArrowLeft') prevSlide(); 
+            if(e.key === 'Escape') exitPPTMode(); 
+        });
+    </script>
+</body>
+</html>
