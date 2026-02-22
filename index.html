@@ -533,6 +533,7 @@
         const audApplause = document.getElementById('audio-applause');
         const audWow = document.getElementById('audio-wow');
         let currentSlideIndex = 0, isPPTMode = false, stream = null, isCurtainOpen = true, isHostBGMPlaying = false, peer = null, conn = null;
+        let localMicActive = true; // Tambahan flag untuk mengatur status mic lokal laptop
 
         // Set Default Volumes
         bgMusic.volume = 0.85;
@@ -832,7 +833,10 @@
             };
 
             recognition.onend = function() {
-                try { recognition.start(); } catch(e){}
+                // Auto restart listening if it drops, HANYA JIKA HP BELUM TERHUBUNG
+                if (localMicActive) {
+                    try { recognition.start(); } catch(e){}
+                }
             };
 
             try { recognition.start(); } catch(e){}
@@ -897,7 +901,26 @@
                 conn = c; 
                 document.getElementById('host-code-display').innerHTML = `<i class="fas fa-check-circle text-green-500 text-3xl mb-2"></i><br><span class="font-bold text-sm text-slate-700">HP TERSAMBUNG</span>`; 
                 setTimeout(()=>document.getElementById('host-code-display').classList.add('hidden'), 3000); 
+                
+                // MATIKAN MIC LOKAL (LAPTOP) AGAR FOKUS KE HP
+                localMicActive = false;
+                if (recognition) {
+                    recognition.stop();
+                }
+                const indicator = document.getElementById('voice-indicator');
+                if (indicator) indicator.classList.add('opacity-0');
+                console.log("Mic laptop dimatikan, fokus menangkap suara dari HP.");
+
                 conn.on('data', executeHostCommand); 
+                
+                // JIKA HP TERPUTUS, HIDUPKAN LAGI MIC LAPTOP
+                conn.on('close', () => {
+                    localMicActive = true;
+                    if (recognition) {
+                        try { recognition.start(); } catch(e){}
+                    }
+                    console.log("Koneksi HP terputus, mic laptop diaktifkan kembali.");
+                });
             });
         }
 
