@@ -11,25 +11,25 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Lucide Icons React Version -->
-    <script src="https://unpkg.com/lucide-react"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .slide-enter { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        body { background-color: #020617; user-select: none; overflow: hidden; }
-        ::-webkit-scrollbar { width: 0px; }
-        .slide-container {
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        body { background-color: #020617; user-select: none; overflow: hidden; margin: 0; }
+        #root { height: 100vh; width: 100vw; }
+        .slide-content-enter {
+            animation: fadeIn 0.5s ease-out forwards;
         }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs - Loaded conditionally -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -40,17 +40,16 @@
 
     <script type="text/babel">
         const { useState, useEffect, useCallback, useRef } = React;
-        
-        // Correctly accessing Lucide React components from the global LucideReact object
-        const { 
-            ChevronLeft, ChevronRight, Play, BookOpen, Heart, 
-            Music, Users, ShieldCheck, Apple, Smartphone, 
-            X, Wifi, Zap, Smile 
-        } = LucideReact;
 
-        // Fallback for Firebase config if not defined in external host
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // Custom Icon Component to avoid library loading issues
+        const Icon = ({ name, size = 24, className = "" }) => {
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name]);
+            return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
+        };
 
         const GymnasticsIcon = ({ type }) => {
             const paths = {
@@ -68,7 +67,6 @@
 
         const App = () => {
             const [currentSlide, setCurrentSlide] = useState(0);
-            const [direction, setDirection] = useState(1);
             const [isAnimating, setIsAnimating] = useState(false);
             const [user, setUser] = useState(null);
             const [showRemoteModal, setShowRemoteModal] = useState(false);
@@ -77,30 +75,30 @@
             const [remoteMode, setRemoteMode] = useState('display');
 
             const dbRef = useRef(null);
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'demo-app';
 
             const slides = [
-                { title: "Materi PJOK: Mengenal Dunia Senam", subtitle: "Dunia Gerak dan Semangat Anak Indonesia Hebat", content: "Selamat datang dalam perjalanan mengenal olahraga senam. Kita akan mempelajari bagaimana gerak tubuh yang teratur dapat membentuk fisik yang kuat dan mental yang tangguh sesuai dengan semangat pelajar masa kini.", type: "cover", icon: <Play size={64} className="text-blue-500" />, gymIcon: 'balance' },
-                { title: "1. Pengertian Senam Secara Umum", content: "Senam adalah aktivitas fisik yang disusun secara sistematis dengan gerakan-gerakan yang terpilih dan terencana untuk mencapai tujuan tertentu. Melalui senam, kita belajar bahwa kesehatan fisik dan mental adalah kunci utama pertumbuhan, karena pada dasarnya senam adalah anak Indonesia hebat.", image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&q=80&w=800", icon: <BookOpen size={32} className="text-blue-400" />, gymIcon: 'stretch' },
-                { title: "2. Tujuan Utama Melakukan Senam", content: "Dalam materi PJOK, senam bertujuan untuk meningkatkan kebugaran jasmani, koordinasi, dan disiplin diri. Sebagai contoh, Senam Anak Indonesia Hebat (SAIH) dirancang agar siswa tidak hanya bugar secara fisik, tetapi juga memiliki karakter yang ceria dan penuh semangat dalam belajar.", image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=800", icon: <Heart size={32} className="text-red-400" />, gymIcon: 'jump' },
-                { title: "3. Komponen Kebugaran: Kekuatan", content: "Kekuatan adalah kemampuan otot untuk menerima beban saat bekerja, yang sangat dilatih dalam berbagai variasi gerakan senam. Dalam Senam Anak Indonesia Hebat, gerakan langkah kaki yang bertenaga dan ayunan tangan yang mantap merupakan latihan dasar untuk memperkuat otot-otot besar pada tubuh.", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=800", icon: <ShieldCheck size={32} className="text-green-400" />, gymIcon: 'balance' },
-                { title: "4. Komponen Kebugaran: Kelentukan", content: "Kelentukan atau fleksibilitas memungkinkan sendi kita bergerak dalam ruang gerak yang luas tanpa hambatan. Senam mengajarkan cara meregangkan otot dengan benar, seperti pada bagian pemanasan SAIH yang dirancang agar tubuh siswa menjadi lebih lentur, elastis, dan tidak mudah mengalami kaku otot.", image: "https://images.unsplash.com/photo-1552196564-972b46b52e47?auto=format&fit=crop&q=80&w=800", icon: <Users size={32} className="text-purple-400" />, gymIcon: 'stretch' },
-                { title: "5. Pentingnya Koordinasi Gerak", content: "Koordinasi adalah kemampuan untuk menyelaraskan gerakan berbagai anggota tubuh secara bersamaan dengan tepat. Saat kita melakukan langkah serentak dalam senam bersama, otak kita bekerja keras menyelaraskan pandangan, pendengaran, dan gerak otot agar tetap harmonis dengan ritme musik.", image: "https://images.unsplash.com/photo-1518611012118-296072bb5704?auto=format&fit=crop&q=80&w=800", icon: <Play size={32} className="text-yellow-400" />, gymIcon: 'jump' },
-                { title: "6. Manfaat Senam bagi Jantung", content: "Senam yang dilakukan secara kontinu memberikan efek kardiovaskular yang sangat baik untuk kesehatan jantung dan paru-paru. Musik bertempo semangat pada Senam Anak Indonesia Hebat memicu jantung memompa darah lebih efisien, sehingga sirkulasi oksigen ke seluruh tubuh menjadi lebih lancar.", image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=800", icon: <Heart size={32} className="text-pink-400" />, gymIcon: 'balance' },
-                { title: "7. Peran Musik dalam Senam Ritmik", content: "Senam ritmik menggunakan musik sebagai pemandu tempo agar gerakan terlihat indah, bertenaga, dan seragam. Lagu 'Mentari Pagi' dalam SAIH memberikan suasana ceria yang membantu kita lebih bersemangat dan ceria dalam mengikuti setiap perubahan gerakan dari awal hingga akhir.", image: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&q=80&w=800", icon: <Music size={32} className="text-indigo-400" />, gymIcon: 'stretch' },
-                { title: "8. Nilai Kedisiplinan & Kerja Sama", content: "Senam yang dilakukan secara berkelompok mengajarkan nilai kedisiplinan dan rasa kebersamaan antar teman. Lirik 'langkah serentak' dalam senam ini menunjukkan bahwa keselarasan gerak bersama jauh lebih utama daripada menonjolkan diri sendiri, menciptakan keindahan dalam persatuan.", image: "https://images.unsplash.com/photo-1526676037777-05a232554f77?auto=format&fit=crop&q=80&w=800", icon: <Users size={32} className="text-orange-400" />, gymIcon: 'jump' },
-                { title: "9. Pembentukan Postur Tubuh", content: "Latihan senam secara rutin sangat efektif untuk memperbaiki postur tubuh agar tetap tegak dan atletis. Gerakan-gerakan dalam Senam Anak Indonesia Hebat yang menuntut posisi badan siap dan dada tegap membantu pertumbuhan tulang belakang kita agar tetap sehat dan tidak bungkuk saat belajar.", image: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&q=80&w=800", icon: <ShieldCheck size={32} className="text-blue-400" />, gymIcon: 'balance' },
-                { title: "10. Aspek Psikologis: Semangat Juang", content: "Selain manfaat fisik, senam juga melatih mental kita untuk memiliki semangat juang dan rasa percaya diri yang tinggi. Pesan motivasi 'kuraih mimpiku' dalam senam ini memberikan dorongan psikologis agar setiap siswa merasa mampu menghadapi tantangan di sekolah dengan hati gembira.", image: "https://images.unsplash.com/photo-1493690283958-32df2c86326e?auto=format&fit=crop&q=80&w=800", icon: <Play size={32} className="text-yellow-500" />, gymIcon: 'stretch' },
-                { title: "11. Tahapan Senam: Pemanasan", content: "Setiap sesi senam yang baik wajib dimulai dengan tahapan pemanasan untuk menaikkan suhu tubuh secara bertahap. Pemanasan yang benar akan melenturkan otot dan sendi agar siap menghadapi gerakan yang lebih intens, sehingga risiko cedera atau terkilir dapat dihindari sepenuhnya.", image: "https://images.unsplash.com/photo-1599447421416-3414500d18a5?auto=format&fit=crop&q=80&w=800", icon: <BookOpen size={32} className="text-emerald-400" />, gymIcon: 'jump' },
-                { title: "12. Tahapan Senam: Gerakan Inti", content: "Gerakan inti adalah bagian utama di mana intensitas latihan mencapai puncaknya untuk melatih daya tahan tubuh. Pada tahap ini, seluruh koordinasi tangan, kaki, dan badan digunakan secara maksimal sesuai koreografi untuk membakar kalori dan menguatkan fungsi organ tubuh bagian dalam.", image: "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&q=80&w=800", icon: <Play size={32} className="text-red-500" />, gymIcon: 'balance' },
-                { title: "13. Tahapan Senam: Pendinginan", content: "Setelah beraktivitas berat, tubuh memerlukan tahap pendinginan untuk mengembalikan detak jantung ke kondisi normal secara perlahan. Gerakan peregangan statis yang santai di bagian akhir senam berfungsi untuk merilekskan otot yang sudah bekerja keras agar tidak terasa pegal keesokan harinya.", image: "https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&q=80&w=800", icon: <Music size={32} className="text-cyan-400" />, gymIcon: 'stretch' },
-                { title: "14. Nutrisi Pendukung Olahraga", content: "Aktivitas senam akan memberikan hasil yang maksimal jika dibarengi dengan asupan nutrisi yang sehat dan bergizi seimbang. Sebagaimana pesan dalam lirik senam SAIH, 'makan bergizi kita jadi tumbuh', asupan protein, vitamin, dan air putih yang cukup sangat penting bagi pertumbuhan kita.", image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800", icon: <Apple size={32} className="text-green-500" />, gymIcon: 'jump' },
-                { title: "15. Senam sebagai Gaya Hidup Sehat", content: "Menjadikan senam sebagai rutinitas harian adalah investasi terbaik untuk masa depan yang lebih sehat, cerdas, dan produktif. Mari kita budayakan bergerak aktif dan berolahraga secara teratur, karena dengan tubuh yang kuat, anak Indonesia akan lebih mudah menggapai cita-citanya.", image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&q=80&w=800", icon: <Play size={32} className="text-indigo-500" />, gymIcon: 'balance' },
-                { title: "Terima Kasih!", subtitle: "Sampai Jumpa di Sesi Senam Berikutnya", content: "Terima kasih banyak atas perhatian Bapak/Ibu Guru dan teman-teman sekalian. Mohon maaf apabila ada kesalahan kata atau kekurangan dalam penyampaian materi presentasi ini. Mari terus semangat berolahraga, karena raga yang sehat adalah awal dari jiwa yang hebat!", type: "cover", icon: <Smile size={64} className="text-yellow-500 animate-pulse" />, gymIcon: 'stretch' }
+                { title: "Materi PJOK: Mengenal Dunia Senam", subtitle: "Dunia Gerak dan Semangat Anak Indonesia Hebat", content: "Selamat datang dalam perjalanan mengenal olahraga senam. Kita akan mempelajari bagaimana gerak tubuh yang teratur dapat membentuk fisik yang kuat dan mental yang tangguh sesuai dengan semangat pelajar masa kini.", type: "cover", icon: "play", iconColor: "text-blue-500", iconSize: 64, gymIcon: 'balance' },
+                { title: "1. Pengertian Senam Secara Umum", content: "Senam adalah aktivitas fisik yang disusun secara sistematis dengan gerakan-gerakan yang terpilih dan terencana untuk mencapai tujuan tertentu. Melalui senam, kita belajar bahwa kesehatan fisik dan mental adalah kunci utama pertumbuhan, karena pada dasarnya senam adalah anak Indonesia hebat.", image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&q=80&w=800", icon: "book-open", iconColor: "text-blue-400", gymIcon: 'stretch' },
+                { title: "2. Tujuan Utama Melakukan Senam", content: "Dalam materi PJOK, senam bertujuan untuk meningkatkan kebugaran jasmani, koordinasi, dan disiplin diri. Sebagai contoh, Senam Anak Indonesia Hebat (SAIH) dirancang agar siswa tidak hanya bugar secara fisik, tetapi juga memiliki karakter yang ceria dan penuh semangat dalam belajar.", image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=800", icon: "heart", iconColor: "text-red-400", gymIcon: 'jump' },
+                { title: "3. Komponen Kebugaran: Kekuatan", content: "Kekuatan adalah kemampuan otot untuk menerima beban saat bekerja, yang sangat dilatih dalam berbagai variasi gerakan senam. Dalam Senam Anak Indonesia Hebat, gerakan langkah kaki yang bertenaga dan ayunan tangan yang mantap merupakan latihan dasar untuk memperkuat otot-otot besar pada tubuh.", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=800", icon: "shield-check", iconColor: "text-green-400", gymIcon: 'balance' },
+                { title: "4. Komponen Kebugaran: Kelentukan", content: "Kelentukan atau fleksibilitas memungkinkan sendi kita bergerak dalam ruang gerak yang luas tanpa hambatan. Senam mengajarkan cara meregangkan otot dengan benar, seperti pada bagian pemanasan SAIH yang dirancang agar tubuh siswa menjadi lebih lentur, elastis, dan tidak mudah mengalami kaku otot.", image: "https://images.unsplash.com/photo-1552196564-972b46b52e47?auto=format&fit=crop&q=80&w=800", icon: "users", iconColor: "text-purple-400", gymIcon: 'stretch' },
+                { title: "5. Pentingnya Koordinasi Gerak", content: "Koordinasi adalah kemampuan untuk menyelaraskan gerakan berbagai anggota tubuh secara bersamaan dengan tepat. Saat kita melakukan langkah serentak dalam senam bersama, otak kita bekerja keras menyelaraskan pandangan, pendengaran, dan gerak otot agar tetap harmonis dengan ritme musik.", image: "https://images.unsplash.com/photo-1518611012118-296072bb5704?auto=format&fit=crop&q=80&w=800", icon: "play", iconColor: "text-yellow-400", gymIcon: 'jump' },
+                { title: "6. Manfaat Senam bagi Jantung", content: "Senam yang dilakukan secara kontinu memberikan efek kardiovaskular yang sangat baik untuk kesehatan jantung dan paru-paru. Musik bertempo semangat pada Senam Anak Indonesia Hebat memicu jantung memompa darah lebih efisien, sehingga sirkulasi oksigen ke seluruh tubuh menjadi lebih lancar.", image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=800", icon: "heart", iconColor: "text-pink-400", gymIcon: 'balance' },
+                { title: "7. Peran Musik dalam Senam Ritmik", content: "Senam ritmik menggunakan musik sebagai pemandu tempo agar gerakan terlihat indah, bertenaga, dan seragam. Lagu 'Mentari Pagi' dalam SAIH memberikan suasana ceria yang membantu kita lebih bersemangat dan ceria dalam mengikuti setiap perubahan gerakan dari awal hingga akhir.", image: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&q=80&w=800", icon: "music", iconColor: "text-indigo-400", gymIcon: 'stretch' },
+                { title: "8. Nilai Kedisiplinan & Kerja Sama", content: "Senam yang dilakukan secara berkelompok mengajarkan nilai kedisiplinan dan rasa kebersamaan antar teman. Lirik 'langkah serentak' dalam senam ini menunjukkan bahwa keselarasan gerak bersama jauh lebih utama daripada menonjolkan diri sendiri, menciptakan keindahan dalam persatuan.", image: "https://images.unsplash.com/photo-1526676037777-05a232554f77?auto=format&fit=crop&q=80&w=800", icon: "users", iconColor: "text-orange-400", gymIcon: 'jump' },
+                { title: "9. Pembentukan Postur Tubuh", content: "Latihan senam secara rutin sangat efektif untuk memperbaiki postur tubuh agar tetap tegak dan atletis. Gerakan-gerakan dalam Senam Anak Indonesia Hebat yang menuntut posisi badan siap dan dada tegap membantu pertumbuhan tulang belakang kita agar tetap sehat dan tidak bungkuk saat belajar.", image: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&q=80&w=800", icon: "shield-check", iconColor: "text-blue-400", gymIcon: 'balance' },
+                { title: "10. Aspek Psikologis: Semangat Juang", content: "Selain manfaat fisik, senam juga melatih mental kita untuk memiliki semangat juang dan rasa percaya diri yang tinggi. Pesan motivasi 'kuraih mimpiku' dalam senam ini memberikan dorongan psikologis agar setiap siswa merasa mampu menghadapi tantangan di sekolah dengan hati gembira.", image: "https://images.unsplash.com/photo-1493690283958-32df2c86326e?auto=format&fit=crop&q=80&w=800", icon: "play", iconColor: "text-yellow-500", gymIcon: 'stretch' },
+                { title: "11. Tahapan Senam: Pemanasan", content: "Setiap sesi senam yang baik wajib dimulai dengan tahapan pemanasan untuk menaikkan suhu tubuh secara bertahap. Pemanasan yang benar akan melenturkan otot dan sendi agar siap menghadapi gerakan yang lebih intens, sehingga risiko cedera atau terkilir dapat dihindari sepenuhnya.", image: "https://images.unsplash.com/photo-1599447421416-3414500d18a5?auto=format&fit=crop&q=80&w=800", icon: "book-open", iconColor: "text-emerald-400", gymIcon: 'jump' },
+                { title: "12. Tahapan Senam: Gerakan Inti", content: "Gerakan inti adalah bagian utama di mana intensitas latihan mencapai puncaknya untuk melatih daya tahan tubuh. Pada tahap ini, seluruh koordinasi tangan, kaki, dan badan digunakan secara maksimal sesuai koreografi untuk membakar kalori dan menguatkan fungsi organ tubuh bagian dalam.", image: "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&q=80&w=800", icon: "play", iconColor: "text-red-500", gymIcon: 'balance' },
+                { title: "13. Tahapan Senam: Pendinginan", content: "Setelah beraktivitas berat, tubuh memerlukan tahap pendinginan untuk mengembalikan detak jantung ke kondisi normal secara perlahan. Gerakan peregangan statis yang santai di bagian akhir senam berfungsi untuk merilekskan otot yang sudah bekerja keras agar tidak terasa pegal keesokan harinya.", image: "https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&q=80&w=800", icon: "music", iconColor: "text-cyan-400", gymIcon: 'stretch' },
+                { title: "14. Nutrisi Pendukung Olahraga", content: "Aktivitas senam akan memberikan hasil yang maksimal jika dibarengi dengan asupan nutrisi yang sehat dan bergizi seimbang. Sebagaimana pesan dalam lirik senam SAIH, 'makan bergizi kita jadi tumbuh', asupan protein, vitamin, dan air putih yang cukup sangat penting bagi pertumbuhan kita.", image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800", icon: "apple", iconColor: "text-green-500", gymIcon: 'jump' },
+                { title: "15. Senam sebagai Gaya Hidup Sehat", content: "Menjadikan senam sebagai rutinitas harian adalah investasi terbaik untuk masa depan yang lebih sehat, cerdas, dan produktif. Mari kita budayakan bergerak aktif dan berolahraga secara teratur, karena dengan tubuh yang kuat, anak Indonesia akan lebih mudah menggapai cita-citanya.", image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&q=80&w=800", icon: "play", iconColor: "text-indigo-500", gymIcon: 'balance' },
+                { title: "Terima Kasih!", subtitle: "Sampai Jumpa di Sesi Senam Berikutnya", content: "Terima kasih banyak atas perhatian Bapak/Ibu Guru dan teman-teman sekalian. Mohon maaf apabila ada kesalahan kata atau kekurangan dalam penyampaian materi presentasi ini. Mari terus semangat berolahraga, karena raga yang sehat adalah awal dari jiwa yang hebat!", type: "cover", icon: "smile", iconColor: "text-yellow-500", iconSize: 64, gymIcon: 'stretch' }
             ];
 
             const triggerSlideChange = useCallback((newIndex) => {
                 if (newIndex === currentSlide) return;
-                setDirection(newIndex > currentSlide ? 1 : -1);
                 setIsAnimating(true);
                 setCurrentSlide(newIndex);
                 
@@ -108,7 +106,7 @@
                     const { doc, setDoc, getFirestore } = window.FirebaseSDK;
                     const db = getFirestore();
                     const syncDoc = doc(db, 'artifacts', appId, 'public', 'data', 'sync', `ssgi${sessionCode}`);
-                    setDoc(syncDoc, { currentSlideIndex: newIndex }, { merge: true }).catch(console.error);
+                    setDoc(syncDoc, { currentSlideIndex: newIndex }, { merge: true }).catch(() => {});
                 }
 
                 setTimeout(() => setIsAnimating(false), 500);
@@ -118,27 +116,29 @@
             const prevSlide = () => currentSlide > 0 && triggerSlideChange(currentSlide - 1);
 
             useEffect(() => {
-                const interval = setInterval(() => {
-                    if (window.FirebaseSDK && !dbRef.current) {
-                        const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore } = window.FirebaseSDK;
+                const initFirebase = async () => {
+                    if (window.FirebaseSDK) {
                         try {
-                            const app = initializeApp(firebaseConfig);
-                            const auth = getAuth(app);
-                            dbRef.current = getFirestore(app);
-                            
-                            signInAnonymously(auth).then(() => {
+                            const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore } = window.FirebaseSDK;
+                            // Safe config handling
+                            const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+                            if (config) {
+                                const app = initializeApp(config);
+                                const auth = getAuth(app);
+                                dbRef.current = getFirestore(app);
+                                await signInAnonymously(auth);
                                 onAuthStateChanged(auth, setUser);
-                            }).catch(() => {
-                                // Fallback if auth fails or not configured
+                            } else {
                                 setUser({ uid: 'local-user' });
-                            });
-                            clearInterval(interval);
+                            }
                         } catch (e) {
-                            // Silently wait if config is missing
+                            setUser({ uid: 'local-user' });
                         }
+                    } else {
+                        setUser({ uid: 'local-user' });
                     }
-                }, 500);
-                return () => clearInterval(interval);
+                };
+                initFirebase();
             }, []);
 
             useEffect(() => {
@@ -152,7 +152,7 @@
                             setCurrentSlide(data.currentSlideIndex);
                         }
                     }
-                }, (err) => console.error("Sync Error:", err));
+                });
                 return () => unsubscribe();
             }, [user, isRemoteConnected, sessionCode, currentSlide]);
 
@@ -166,75 +166,68 @@
                 return () => window.removeEventListener('keydown', handleKeyDown);
             }, [currentSlide, showRemoteModal]);
 
-            const handleScreenClick = (e) => {
-                if (showRemoteModal) return;
-                const width = window.innerWidth;
-                if (e.clientX < width * 0.3) prevSlide();
-                else if (e.clientX > width * 0.7) nextSlide();
-            };
+            const current = slides[currentSlide];
 
             if (remoteMode === 'controller') {
                 return (
                     <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-white text-center">
-                        <Smartphone size={48} className="text-blue-400 mb-4" />
+                        <Icon name="smartphone" size={64} className="text-blue-400 mb-6" />
                         <h1 className="text-2xl font-bold mb-4">Remote Control</h1>
                         <div className="bg-slate-800 px-6 py-2 rounded-xl text-xl font-mono text-blue-400 mb-10 tracking-widest">ssgi{sessionCode}</div>
                         <div className="grid gap-6 w-full max-w-xs">
-                            <button onClick={nextSlide} className="h-32 bg-blue-600 rounded-3xl text-3xl font-black shadow-xl active:scale-95 transition-all flex flex-col items-center justify-center"><ChevronRight size={48} /> LANJUT</button>
-                            <button onClick={prevSlide} className="h-24 bg-slate-700 rounded-3xl text-xl font-bold shadow-xl active:scale-95 transition-all flex flex-col items-center justify-center"><ChevronLeft size={32} /> KEMBALI</button>
+                            <button onClick={nextSlide} className="h-32 bg-blue-600 rounded-3xl text-3xl font-black shadow-xl active:scale-95 transition-all flex flex-col items-center justify-center">LANJUT</button>
+                            <button onClick={prevSlide} className="h-24 bg-slate-700 rounded-3xl text-xl font-bold shadow-xl active:scale-95 transition-all flex flex-col items-center justify-center">KEMBALI</button>
                         </div>
-                        <button onClick={() => setRemoteMode('display')} className="mt-12 text-slate-500 underline flex items-center gap-2"><X size={16} /> Keluar Mode Remote</button>
+                        <button onClick={() => setRemoteMode('display')} className="mt-12 text-slate-500 underline">Keluar Mode Remote</button>
                     </div>
                 );
             }
 
-            const current = slides[currentSlide];
-
             return (
-                <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 font-sans text-white overflow-hidden" onClick={handleScreenClick}>
+                <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 font-sans text-white overflow-hidden" onClick={() => !showRemoteModal && nextSlide()}>
                     
                     <button onClick={(e) => { e.stopPropagation(); setShowRemoteModal(true); }} className={`fixed top-6 right-6 z-50 p-4 rounded-full shadow-2xl transition-all flex items-center gap-2 ${isRemoteConnected ? 'bg-green-600' : 'bg-blue-600 hover:scale-110'}`}>
-                        {isRemoteConnected ? <Wifi size={24} /> : <Smartphone size={24} />}
+                        <Icon name={isRemoteConnected ? "wifi" : "smartphone"} size={24} />
                         {isRemoteConnected && <span className="text-sm font-bold">ssgi{sessionCode}</span>}
                     </button>
 
-                    <div className="relative w-full max-w-5xl group">
-                        <div className="absolute -top-12 -left-12 w-64 h-64 text-blue-500 pointer-events-none transition-transform duration-1000 group-hover:rotate-12"><GymnasticsIcon type={current.gymIcon} /></div>
-                        <div className="absolute -bottom-12 -right-12 w-64 h-64 text-indigo-500 pointer-events-none transition-transform duration-1000 group-hover:-rotate-12"><GymnasticsIcon type={current.gymIcon} /></div>
+                    <div className="relative w-full max-w-5xl">
+                        <div className="absolute -top-12 -left-12 w-64 h-64 text-blue-500 pointer-events-none"><GymnasticsIcon type={current.gymIcon} /></div>
+                        <div className="absolute -bottom-12 -right-12 w-64 h-64 text-indigo-500 pointer-events-none"><GymnasticsIcon type={current.gymIcon} /></div>
 
-                        <div className="relative bg-white rounded-[2.5rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden min-h-[600px] flex flex-col transition-all border-b-8 border-blue-600">
-                            <div className={`absolute inset-0 z-10 bg-blue-600 pointer-events-none transition-all duration-500 ${isAnimating ? 'opacity-10' : 'opacity-0'}`} />
+                        <div className="relative bg-white rounded-[2.5rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden min-h-[600px] flex flex-col border-b-8 border-blue-600">
                             <div className="w-full h-1.5 bg-slate-100"><div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${((currentSlide + 1) / slides.length) * 100}%` }} /></div>
 
-                            <div className={`flex-1 flex flex-col md:flex-row transition-all duration-500 ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+                            <div className={`flex-1 flex flex-col md:flex-row transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
                                 <div className={`flex-1 p-10 md:p-16 flex flex-col justify-center ${current.type === 'cover' ? 'items-center text-center' : ''}`}>
-                                    <div className="mb-8 inline-block p-6 bg-blue-50 rounded-full animate-bounce">{current.icon}</div>
+                                    <div className="mb-8 inline-block p-6 bg-blue-50 rounded-full">
+                                        <Icon name={current.icon} size={current.iconSize || 32} className={current.iconColor} />
+                                    </div>
                                     <h1 className={`font-black text-slate-900 leading-tight mb-8 ${current.type === 'cover' ? 'text-5xl md:text-7xl' : 'text-4xl md:text-5xl'}`}>{current.title}</h1>
                                     {current.subtitle && <h2 className="text-2xl text-blue-600 font-bold mb-6 italic">{current.subtitle}</h2>}
                                     <div className="relative">
                                         <div className="absolute -left-4 top-0 bottom-0 w-1.5 bg-blue-500 rounded-full" />
                                         <p className="text-xl text-slate-600 leading-relaxed pl-6 font-medium">{current.content}</p>
                                     </div>
-                                    <div className="mt-12 text-xs font-black tracking-widest text-slate-300 uppercase">Slide {currentSlide + 1} / {slides.length}</div>
                                 </div>
 
                                 {current.image && (
                                     <div className="hidden md:block w-2/5 relative">
-                                        <img src={current.image} className="absolute inset-0 w-full h-full object-cover grayscale-[0.2] hover:grayscale-0 transition-all duration-700" alt="Ilustrasi Senam" />
-                                        <div className="absolute bottom-6 right-6 z-20 bg-white/95 backdrop-blur-md p-4 rounded-3xl shadow-2xl flex items-center gap-3 border border-slate-100">
-                                            <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white"><Zap size={20} /></div>
-                                            <span className="text-slate-900 font-black text-xs uppercase tracking-tighter">Anak Indonesia Hebat</span>
+                                        <img src={current.image} className="absolute inset-0 w-full h-full object-cover" alt="Ilustrasi" />
+                                        <div className="absolute bottom-6 right-6 z-20 bg-white/95 p-4 rounded-3xl shadow-xl flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white"><Icon name="zap" size={20} /></div>
+                                            <span className="text-slate-900 font-black text-xs uppercase">Anak Indonesia Hebat</span>
                                         </div>
                                     </div>
                                 )}
                             </div>
 
                             <div className="bg-slate-50 p-6 flex justify-between items-center border-t border-slate-200">
-                                <button onClick={(e) => { e.stopPropagation(); prevSlide(); }} disabled={currentSlide === 0} className={`px-6 py-4 rounded-2xl font-black transition-all flex items-center ${currentSlide === 0 ? 'text-slate-200' : 'text-slate-800 hover:bg-white'}`}><ChevronLeft className="mr-2" strokeWidth={4}/> KEMBALI</button>
+                                <button onClick={(e) => { e.stopPropagation(); prevSlide(); }} disabled={currentSlide === 0} className={`px-6 py-4 rounded-2xl font-black transition-all flex items-center ${currentSlide === 0 ? 'text-slate-200' : 'text-slate-800 hover:bg-white'}`}>KEMBALI</button>
                                 <div className="hidden sm:flex space-x-2">
                                     {slides.map((_, idx) => <div key={idx} className={`h-2 rounded-full transition-all duration-300 ${idx === currentSlide ? 'bg-blue-600 w-8' : 'bg-slate-300 w-2'}`} />)}
                                 </div>
-                                <button onClick={(e) => { e.stopPropagation(); nextSlide(); }} disabled={currentSlide === slides.length - 1} className={`px-12 py-4 rounded-2xl font-black shadow-2xl transition-all flex items-center ${currentSlide === slides.length - 1 ? 'bg-slate-200 text-slate-400' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>{currentSlide === slides.length - 1 ? 'SELESAI' : 'LANJUT'} <ChevronRight className="ml-2" strokeWidth={4}/></button>
+                                <button onClick={(e) => { e.stopPropagation(); nextSlide(); }} disabled={currentSlide === slides.length - 1} className={`px-12 py-4 rounded-2xl font-black shadow-2xl transition-all flex items-center ${currentSlide === slides.length - 1 ? 'bg-slate-200 text-slate-400' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>{currentSlide === slides.length - 1 ? 'SELESAI' : 'LANJUT'}</button>
                             </div>
                         </div>
                     </div>
@@ -244,7 +237,7 @@
                             <div className="bg-white rounded-[3rem] p-12 w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
                                 <div className="flex justify-between items-center mb-8">
                                     <h2 className="text-2xl font-black text-slate-900">Hubungkan HP</h2>
-                                    <button onClick={() => setShowRemoteModal(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400"><X /></button>
+                                    <button onClick={() => setShowRemoteModal(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400"><Icon name="x" size={24} /></button>
                                 </div>
                                 <p className="text-slate-500 mb-8 leading-relaxed">Masukkan kode <b>ssgi</b> + 3 angka yang sama di HP dan Komputer kamu.</p>
                                 <div className="flex items-center gap-2 bg-slate-50 p-6 rounded-3xl border-4 border-slate-100 mb-10">
@@ -252,16 +245,12 @@
                                     <input type="text" maxLength={3} placeholder="000" value={sessionCode} onChange={(e) => setSessionCode(e.target.value.replace(/\D/g, ''))} className="bg-transparent border-none focus:outline-none text-3xl font-mono font-black text-slate-900 w-full" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <button onClick={() => { setRemoteMode('controller'); handleConnect(); }} className="bg-slate-900 text-white py-5 rounded-3xl font-black flex flex-col items-center gap-1"><Smartphone size={20}/> REMOTE</button>
-                                    <button onClick={handleConnect} disabled={sessionCode.length < 3} className={`py-5 rounded-3xl font-black flex flex-col items-center gap-1 transition-all ${sessionCode.length === 3 ? 'bg-blue-600 text-white shadow-xl' : 'bg-slate-100 text-slate-300'}`}><Wifi size={20}/> CONNECT</button>
+                                    <button onClick={() => { setRemoteMode('controller'); setIsRemoteConnected(true); setShowRemoteModal(false); }} className="bg-slate-900 text-white py-5 rounded-3xl font-black flex flex-col items-center gap-1">REMOTE</button>
+                                    <button onClick={() => { setIsRemoteConnected(true); setShowRemoteModal(false); }} disabled={sessionCode.length < 3} className={`py-5 rounded-3xl font-black flex flex-col items-center gap-1 transition-all ${sessionCode.length === 3 ? 'bg-blue-600 text-white shadow-xl' : 'bg-slate-100 text-slate-300'}`}>CONNECT</button>
                                 </div>
                             </div>
                         </div>
                     )}
-                    
-                    <div className="mt-8 text-center text-slate-600 flex items-center gap-4 text-[10px] font-bold tracking-[0.2em] uppercase">
-                        <span>⌨️ ARROWS</span><span>•</span><span>📱 P2P SYNC</span><span>•</span><span>🖱️ TAP</span>
-                    </div>
                 </div>
             );
         };
